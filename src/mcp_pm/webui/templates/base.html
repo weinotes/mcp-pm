@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}mcp-pm Dashboard{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        surface: {
+                            50: '#f8fafc',
+                            100: '#1e1e2e',
+                            200: '#181825',
+                            300: '#11111b',
+                            400: '#0f0f1a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { scrollbar-width: thin; scrollbar-color: #313244 #181825; }
+        body { background-color: #11111b; color: #cdd6f4; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .card { background-color: #1e1e2e; border: 1px solid #313244; border-radius: 0.75rem; }
+        .card-hover:hover { border-color: #45475a; transition: border-color 0.2s; }
+        .btn-primary { background-color: #89b4fa; color: #1e1e2e; font-weight: 600; border-radius: 0.5rem; padding: 0.5rem 1rem; }
+        .btn-primary:hover { background-color: #74c7ec; }
+        .btn-danger { background-color: #f38ba8; color: #1e1e2e; font-weight: 600; border-radius: 0.5rem; padding: 0.5rem 1rem; }
+        .btn-danger:hover { background-color: #eba0ac; }
+        .btn-ghost { color: #a6adc8; border: 1px solid #313244; border-radius: 0.5rem; padding: 0.5rem 1rem; }
+        .btn-ghost:hover { background-color: #313244; color: #cdd6f4; }
+        .badge { display: inline-flex; align-items: center; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .badge-green { background-color: #a6e3a1; color: #1e1e2e; }
+        .badge-yellow { background-color: #f9e2af; color: #1e1e2e; }
+        .badge-red { background-color: #f38ba8; color: #1e1e2e; }
+        .badge-blue { background-color: #89b4fa; color: #1e1e2e; }
+        .badge-gray { background-color: #45475a; color: #cdd6f4; }
+        .input { background-color: #181825; border: 1px solid #313244; border-radius: 0.5rem; padding: 0.5rem 0.75rem; color: #cdd6f4; width: 100%; }
+        .input:focus { outline: none; border-color: #89b4fa; box-shadow: 0 0 0 2px rgba(137, 180, 250, 0.2); }
+        textarea.input { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; border-radius: 0.5rem; color: #a6adc8; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: #313244; color: #cdd6f4; }
+        .status-dot { width: 0.5rem; height: 0.5rem; border-radius: 9999px; display: inline-block; }
+        .status-dot.online { background-color: #a6e3a1; box-shadow: 0 0 6px rgba(166, 227, 161, 0.5); }
+        .status-dot.offline { background-color: #f38ba8; }
+        .status-dot.pending { background-color: #f9e2af; }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .status-dot.pending { animation: pulse-dot 1.5s ease-in-out infinite; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="hidden md:flex md:flex-col w-64 bg-surface-200 border-r border-[#313244] flex-shrink-0">
+            <div class="p-5 border-b border-[#313244]">
+                <a href="/" class="flex items-center gap-3">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                        <div class="text-lg font-bold text-[#cdd6f4]">mcp-pm</div>
+                        <div class="text-xs text-[#6c7086]">Dashboard</div>
+                    </div>
+                </a>
+            </div>
+            <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+                <a href="/" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Dashboard
+                </a>
+                <a href="/servers" class="sidebar-link {% if active_page == 'servers' %}active{% endif %}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                    Servers
+                </a>
+                <a href="/config" class="sidebar-link {% if active_page == 'config' %}active{% endif %}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Config
+                </a>
+                <a href="/logs" class="sidebar-link {% if active_page == 'logs' %}active{% endif %}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Logs
+                </a>
+                <a href="/install" class="sidebar-link {% if active_page == 'install' %}active{% endif %}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Install
+                </a>
+            </nav>
+            <div class="p-4 border-t border-[#313244] text-xs text-[#6c7086]">
+                mcp-pm v0.1.0
+            </div>
+        </aside>
+
+        <!-- Mobile header -->
+        <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-surface-200 border-b border-[#313244] px-4 py-3 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2">
+                <span class="text-xl">⚡</span>
+                <span class="font-bold">mcp-pm</span>
+            </a>
+            <button id="mobile-menu-btn" class="p-2 rounded-lg hover:bg-[#313244]">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+
+        <!-- Mobile menu overlay -->
+        <div id="mobile-menu" class="md:hidden fixed inset-0 z-40 bg-[#11111b]/95 hidden">
+            <div class="p-4 pt-16 space-y-1">
+                <a href="/" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %} text-lg">🏠 Dashboard</a>
+                <a href="/servers" class="sidebar-link {% if active_page == 'servers' %}active{% endif %} text-lg">🖥 Servers</a>
+                <a href="/config" class="sidebar-link {% if active_page == 'config' %}active{% endif %} text-lg">⚙️ Config</a>
+                <a href="/logs" class="sidebar-link {% if active_page == 'logs' %}active{% endif %} text-lg">📋 Logs</a>
+                <a href="/install" class="sidebar-link {% if active_page == 'install' %}active{% endif %} text-lg">➕ Install</a>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <main class="flex-1 overflow-y-auto {% if active_page != 'dashboard' %}pt-14 md:pt-0{% endif %}">
+            <div class="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('mobile-menu-btn')?.addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+        document.getElementById('mobile-menu')?.addEventListener('click', function() {
+            this.classList.add('hidden');
+        });
+
+        // HTMX toast for errors
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            console.error('HTMX error:', evt.detail);
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Servers — mcp-pm{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-[#cdd6f4]">Servers</h1>
+            <p class="text-sm text-[#6c7086]">Manage all installed MCP servers</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="/install" class="btn-primary text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Install New
+            </a>
+        </div>
+    </div>
+
+    {% if servers %}
+    <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-[#181825] text-[#6c7086] text-xs uppercase">
+                        <th class="text-left py-3 px-4">Status</th>
+                        <th class="text-left py-3 px-4">Name</th>
+                        <th class="text-left py-3 px-4 hidden md:table-cell">Type</th>
+                        <th class="text-left py-3 px-4 hidden lg:table-cell">Source</th>
+                        <th class="text-right py-3 px-4 hidden sm:table-cell">Version</th>
+                        <th class="text-right py-3 px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for srv in servers %}
+                    <tr class="border-t border-[#313244] hover:bg-[#313244]/30 transition-colors">
+                        <td class="py-3 px-4">
+                            <span class="status-dot {% if srv.status == 'running' %}online{% elif srv.status == 'error' %}offline{% else %}pending{% endif %}"></span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="font-medium text-[#cdd6f4]">{{ srv.name }}</div>
+                            <div class="text-xs text-[#6c7086] mt-0.5">{{ srv.description or '' }}</div>
+                        </td>
+                        <td class="py-3 px-4 hidden md:table-cell">
+                            <span class="badge badge-gray">{{ srv.source_type }}</span>
+                        </td>
+                        <td class="py-3 px-4 hidden lg:table-cell">
+                            <span class="text-xs text-[#a6adc8] truncate max-w-[200px] inline-block align-middle">{{ srv.source_url }}</span>
+                        </td>
+                        <td class="py-3 px-4 text-right hidden sm:table-cell text-[#a6adc8]">
+                            {{ srv.version or '-' }}
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                {% if srv.status == 'running' %}
+                                <button class="text-xs text-[#f9e2af] hover:underline"
+                                        hx-post="/api/servers/{{ srv.name }}/restart"
+                                        hx-confirm="Restart '{{ srv.name }}'?"
+                                        hx-target="closest tr" hx-swap="none">
+                                    Restart
+                                </button>
+                                <button class="text-xs text-[#f38ba8] hover:underline"
+                                        hx-post="/api/servers/{{ srv.name }}/stop"
+                                        hx-confirm="Stop '{{ srv.name }}'?"
+                                        hx-target="closest tr" hx-swap="none">
+                                    Stop
+                                </button>
+                                {% else %}
+                                <button class="text-xs text-[#a6e3a1] hover:underline"
+                                        hx-post="/api/servers/{{ srv.name }}/start"
+                                        hx-target="closest tr" hx-swap="none">
+                                    Start
+                                </button>
+                                {% endif %}
+                                <button class="text-xs text-[#f38ba8] hover:underline"
+                                        hx-post="/api/servers/{{ srv.name }}/uninstall"
+                                        hx-confirm="Uninstall '{{ srv.name }}'? This cannot be undone."
+                                        hx-target="#servers-table" hx-swap="none">
+                                    Uninstall
+                                </button>
+                                <a href="/tools/{{ srv.name }}" class="text-xs text-[#89b4fa] hover:underline">Tools</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="text-sm text-[#6c7086]">
+        {{ servers|length }} server(s) installed
+        &middot;
+        {{ servers|selectattr('status', 'equalto', 'running')|list|length }} running
+        &middot;
+        {{ servers|selectattr('status', 'equalto', 'stopped')|list|length }} stopped
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="card p-12 text-center">
+        <div class="text-5xl mb-4">📦</div>
+        <h2 class="text-xl font-semibold text-[#cdd6f4] mb-2">No Servers Installed</h2>
+        <p class="text-[#6c7086] mb-6 max-w-md mx-auto">
+            MCP servers provide tools and capabilities to your AI applications.
+            Install your first server to get started.
+        </p>
+        <a href="/install" class="btn-primary inline-flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Browse Registry
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

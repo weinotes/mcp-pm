@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}mcp-pm Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-[#cdd6f4]">Dashboard</h1>
+            <p class="text-[#6c7086] mt-1">Overview of your MCP server ecosystem</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="/install" class="btn-primary text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Install New Server
+            </a>
+            <button hx-get="/api/stats" hx-target="#stats-cards" hx-trigger="load, every 30s" class="btn-ghost text-sm">
+                ↻ Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div id="stats-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% include "_stats_cards.html" %}
+    </div>
+
+    <!-- Servers Grid -->
+    <div>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-[#cdd6f4]">Installed Servers</h2>
+            <a href="/servers" class="text-sm text-[#89b4fa] hover:underline">View all →</a>
+        </div>
+        <div id="servers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+             hx-get="/api/servers" hx-trigger="load, every 10s" hx-swap="innerHTML">
+            {% if servers %}
+                {% for srv in servers %}
+                <div class="card card-hover p-5">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🖥</span>
+                            <div>
+                                <div class="font-semibold text-[#cdd6f4]">{{ srv.name }}</div>
+                                <div class="text-xs text-[#6c7086]">{{ srv.source_type }}</div>
+                            </div>
+                        </div>
+                        <span class="status-dot {% if srv.status == 'running' %}online{% elif srv.status == 'error' %}offline{% else %}pending{% endif %}"></span>
+                    </div>
+                    <p class="text-sm text-[#a6adc8] mb-3 line-clamp-2">{{ srv.description or 'No description' }}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="badge badge-blue">{{ srv.tools_count or 0 }} tools</span>
+                        <div class="flex gap-2">
+                            <button class="text-xs text-[#89b4fa] hover:underline"
+                                    hx-post="/api/servers/{{ srv.name }}/restart"
+                                    hx-confirm="Restart '{{ srv.name }}'?"
+                                    hx-target="#servers-grid" hx-swap="none">
+                                Restart
+                            </button>
+                            <a href="/tools/{{ srv.name }}" class="text-xs text-[#a6e3a1] hover:underline">Tools</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-span-full card p-8 text-center">
+                    <div class="text-4xl mb-3">📦</div>
+                    <h3 class="text-lg font-semibold text-[#cdd6f4] mb-1">No Servers Installed</h3>
+                    <p class="text-sm text-[#6c7086] mb-4">Get started by installing your first MCP server.</p>
+                    <a href="/install" class="btn-primary inline-block">Browse Registry</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Activity / Quick Links -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="card p-5">
+            <h3 class="font-semibold text-[#cdd6f4] mb-3">Quick Actions</h3>
+            <div class="space-y-2">
+                <a href="/install" class="flex items-center gap-3 p-3 rounded-lg hover:bg-[#313244] transition-colors">
+                    <span class="w-8 h-8 rounded-lg bg-[#89b4fa]/10 flex items-center justify-center text-[#89b4fa]">+</span>
+                    <div>
+                        <div class="text-sm font-medium">Install a Server</div>
+                        <div class="text-xs text-[#6c7086]">Browse or search the MCP registry</div>
+                    </div>
+                </a>
+                <a href="/config" class="flex items-center gap-3 p-3 rounded-lg hover:bg-[#313244] transition-colors">
+                    <span class="w-8 h-8 rounded-lg bg-[#f9e2af]/10 flex items-center justify-center text-[#f9e2af]">⚙</span>
+                    <div>
+                        <div class="text-sm font-medium">Edit Configuration</div>
+                        <div class="text-xs text-[#6c7086]">View and edit config.yaml</div>
+                    </div>
+                </a>
+                <a href="/logs" class="flex items-center gap-3 p-3 rounded-lg hover:bg-[#313244] transition-colors">
+                    <span class="w-8 h-8 rounded-lg bg-[#a6e3a1]/10 flex items-center justify-center text-[#a6e3a1]">📋</span>
+                    <div>
+                        <div class="text-sm font-medium">View Logs</div>
+                        <div class="text-xs text-[#6c7086]">Monitor real-time server activity</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="card p-5">
+            <h3 class="font-semibold text-[#cdd6f4] mb-3">System Info</h3>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between py-2 border-b border-[#313244]">
+                    <span class="text-[#6c7086]">Version</span>
+                    <span class="text-[#cdd6f4]">0.1.0</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-[#313244]">
+                    <span class="text-[#6c7086]">Servers</span>
+                    <span class="text-[#cdd6f4]">{{ servers|length }}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-[#313244]">
+                    <span class="text-[#6c7086]">Total Tools</span>
+                    <span class="text-[#cdd6f4]">{{ total_tools }}</span>
+                </div>
+                <div class="flex justify-between py-2">
+                    <span class="text-[#6c7086]">Config Path</span>
+                    <span class="text-[#a6adc8] text-xs truncate max-w-[200px]">{{ config_path }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Config — mcp-pm{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-[#cdd6f4]">Configuration</h1>
+            <p class="text-sm text-[#6c7086]">View and edit mcp-pm configuration</p>
+        </div>
+        <div class="flex gap-3">
+            <button class="btn-ghost text-sm"
+                    onclick="const blob = new Blob([document.getElementById('config-editor').value], {type: 'text/yaml'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'config.yaml'; a.click();">
+                📥 Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Config editor -->
+    <div class="card p-5">
+        <form hx-post="/api/config" hx-target="#config-save-status">
+            <div class="mb-3">
+                <label class="block text-sm text-[#a6adc8] mb-1">config.yaml</label>
+                <p class="text-xs text-[#6c7086] mb-3">
+                    Path: <code class="text-[#89b4fa]">{{ config_path }}</code>
+                </p>
+                <textarea id="config-editor"
+                          name="yaml_content"
+                          class="input text-xs font-mono h-80"
+                          spellcheck="false">{{ config_yaml }}</textarea>
+            </div>
+            <div class="flex items-center gap-3">
+                <button type="submit" class="btn-primary text-sm">💾 Save</button>
+                <span id="config-save-status"></span>
+            </div>
+        </form>
+    </div>
+
+    <!-- Import -->
+    <div class="card p-5">
+        <h3 class="font-semibold text-[#cdd6f4] mb-3">Import Configuration</h3>
+        <p class="text-sm text-[#6c7086] mb-3">
+            Upload a YAML file to replace the current configuration.
+        </p>
+        <form hx-post="/api/config/import"
+              hx-target="#config-import-status"
+              hx-encoding="multipart/form-data"
+              class="space-y-3">
+            <input type="file" name="file" accept=".yaml,.yml" class="input text-sm file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-[#89b4fa] file:text-[#1e1e2e] file:font-medium">
+            <div class="flex items-center gap-3">
+                <button type="submit" class="btn-primary text-sm">📤 Upload & Apply</button>
+                <span id="config-import-status"></span>
+            </div>
+        </form>
+    </div>
+
+    <!-- Key-value view -->
+    {% if config_data %}
+    <div class="card p-5">
+        <h3 class="font-semibold text-[#cdd6f4] mb-3">Config Keys</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-[#6c7086] text-xs uppercase border-b border-[#313244]">
+                        <th class="text-left py-2 pr-4">Key</th>
+                        <th class="text-left py-2">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% macro render_config(data, prefix='') %}
+                        {% for key, value in data.items() %}
+                        <tr class="border-b border-[#313244]/50">
+                            <td class="py-2 pr-4 font-mono text-xs text-[#89b4fa]">{{ prefix }}{{ key }}</td>
+                            <td class="py-2">
+                                {% if value is mapping %}
+                                <span class="text-[#a6adc8]">{{ '{...}' }}</span>
+                                {% elif value is sequence and value is not string %}
+                                <span class="text-[#a6adc8]">{{ value }}</span>
+                                {% elif value is boolean %}
+                                <span class="badge {% if value %}badge-green{% else %}badge-gray{% endif %}">{{ value }}</span>
+                                {% elif value is none %}
+                                <span class="text-[#6c7086]">null</span>
+                                {% else %}
+                                <span class="text-[#cdd6f4]">{{ value }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endmacro %}
+                    {{ render_config(config_data) }}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

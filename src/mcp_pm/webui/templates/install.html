@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Install — mcp-pm{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-[#cdd6f4]">Install Server</h1>
+            <p class="text-sm text-[#6c7086]">Discover and install MCP servers from the registry</p>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="card p-4">
+        <div class="flex gap-3">
+            <input type="text"
+                   id="search-input"
+                   class="input flex-1"
+                   placeholder="Search MCP servers by name, keyword, or source URL..."
+                   hx-get="/api/search"
+                   hx-trigger="keyup changed delay:300ms"
+                   hx-target="#search-results"
+                   hx-include="[name='query']"
+                   name="query"
+                   autocomplete="off">
+            <button class="btn-primary" onclick="document.getElementById('search-input').dispatchEvent(new Event('keyup'))">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <span class="hidden sm:inline ml-1">Search</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    <div id="search-results">
+        <!-- Popular / Recommended section shown when no search -->
+        {% if popular %}
+        <div>
+            <h2 class="text-lg font-semibold text-[#cdd6f4] mb-4">Popular Servers</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for srv in popular %}
+                <div class="card card-hover p-5">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <div class="font-semibold text-[#cdd6f4]">{{ srv.name }}</div>
+                            <div class="text-xs text-[#6c7086]">{{ srv.author or 'Community' }}</div>
+                        </div>
+                        {% if srv.stars %}
+                        <span class="badge badge-yellow">★ {{ srv.stars }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-sm text-[#a6adc8] mb-3 line-clamp-2">{{ srv.description }}</p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex gap-1">
+                            <span class="badge badge-gray">{{ srv.source_type }}</span>
+                            {% if srv.tools_count %}
+                            <span class="badge badge-blue">{{ srv.tools_count }} tools</span>
+                            {% endif %}
+                        </div>
+                        <button class="btn-primary text-xs"
+                                hx-post="/api/install"
+                                hx-vals='{"name": "{{ srv.name }}", "source_url": "{{ srv.source_url }}", "source_type": "{{ srv.source_type }}"}'
+                                hx-target="#install-status"
+                                hx-confirm="Install '{{ srv.name }}'?">
+                            Install
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Install status area -->
+    <div id="install-status"></div>
+
+    <!-- Manual install -->
+    <div class="card p-5">
+        <h3 class="font-semibold text-[#cdd6f4] mb-3">Manual Install</h3>
+        <p class="text-sm text-[#6c7086] mb-4">
+            Install from a git repository, pip package, or npm package.
+        </p>
+        <form hx-post="/api/install" hx-target="#install-status" class="space-y-3">
+            <div>
+                <label class="block text-sm text-[#a6adc8] mb-1">Source URL</label>
+                <input type="text" name="source_url" class="input" placeholder="e.g. https://github.com/user/mcp-server.git or pip:package-name" required>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm text-[#a6adc8] mb-1">Source Type</label>
+                    <select name="source_type" class="input">
+                        <option value="auto">Auto-detect</option>
+                        <option value="git">Git</option>
+                        <option value="pip">Pip</option>
+                        <option value="npm">NPM</option>
+                        <option value="docker">Docker</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-[#a6adc8] mb-1">Custom Name (optional)</label>
+                    <input type="text" name="name" class="input" placeholder="my-server">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary text-sm">Install</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
