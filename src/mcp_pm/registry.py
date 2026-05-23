@@ -668,30 +668,48 @@ class PyPIRegistryBackend(RegistryBackend):
         return self._client
 
     async def search(self, query: str, limit: int = 20) -> list[ServerManifest]:
-        """Search PyPI for MCP-related packages."""
+        """Search PyPI for MCP-related packages by scraping HTML search results."""
+        import re
+
         client = await self._get_client()
         results: list[ServerManifest] = []
         try:
             resp = await client.get(
                 f"{self.base_url}/search/",
-                params={"q": f"mcp {query}", "page": 1},
+                params={"q": f"mcp {query}"},
+                headers={"Accept": "text/html"},
             )
             resp.raise_for_status()
-            data = resp.json()
-            # PyPI search returns results in data.results
-            for item in data.get("results", [])[:limit]:
-                name = item.get("name", "")
-                if not name or "mcp" not in name.lower():
+            # Extract package names from HTML using simple regex
+            # PyPI search results have links like: /project/package-name/
+            pkg_names: set[str] = set()
+            for m in re.finditer(r'/project/([^/"]+)/', resp.text):
+                name = m.group(1)
+                if "mcp" in name.lower() and name not in pkg_names:
+                    pkg_names.add(name)
+                    if len(pkg_names) >= limit:
+                        break
+
+            # Fetch details from JSON API
+            for pkg_name in list(pkg_names)[:limit]:
+                try:
+                    detail = await client.get(
+                        f"{self.base_url}/pypi/{pkg_name}/json",
+                        timeout=httpx.Timeout(3.0),
+                    )
+                    if detail.status_code == 200:
+                        info = detail.json().get("info", {})
+                        results.append(ServerManifest(
+                            name=info.get("name", pkg_name),
+                            description=info.get("summary", ""),
+                            source_type="pip",
+                            source_url=info.get("name", pkg_name),
+                            author=info.get("author", "PyPI"),
+                            homepage=info.get("home_page", ""),
+                            license=info.get("license", ""),
+                        ))
+                except Exception:
                     continue
-                results.append(ServerManifest(
-                    name=name,
-                    description=item.get("summary", ""),
-                    source_type="pip",
-                    source_url=name,
-                    author=item.get("author", "PyPI"),
-                    homepage=item.get("home_page", ""),
-                    license=item.get("license", ""),
-                ))
         except Exception as exc:
             logger.debug("PyPI search failed: %s", exc)
         return results

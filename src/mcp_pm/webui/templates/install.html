@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-[#cdd6f4]">{{ _("Install Server") }}</h1>
-            <p class="text-sm text-[#6c7086]">Discover and install MCP servers from the registry</p>
+            <p class="text-sm text-[#6c7086]">{{ _("Discover and install MCP servers from the registry") }}</p>
         </div>
     </div>
 
@@ -25,7 +25,7 @@
                    autocomplete="off">
             <button class="btn-primary" onclick="document.getElementById('search-input').dispatchEvent(new Event('keyup'))">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <span class="hidden sm:inline ml-1">Search</span>
+                <span class="hidden sm:inline ml-1">{{ _("Search") }}</span>
             </button>
         </div>
     </div>
@@ -35,7 +35,7 @@
         <!-- Popular / Recommended section shown when no search -->
         {% if popular %}
         <div>
-            <h2 class="text-lg font-semibold text-[#cdd6f4] mb-4">Popular Servers</h2>
+            <h2 class="text-lg font-semibold text-[#cdd6f4] mb-4">{{ _("Popular Servers") }}</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {% for srv in popular %}
                 <div class="card card-hover p-5">
@@ -76,28 +76,28 @@
 
     <!-- Manual install -->
     <div class="card p-5">
-        <h3 class="font-semibold text-[#cdd6f4] mb-3">Manual Install</h3>
+        <h3 class="font-semibold text-[#cdd6f4] mb-3">{{ _("Manual Install") }}</h3>
         <p class="text-sm text-[#6c7086] mb-4">
             Install from a git repository, pip package, or npm package.
         </p>
         <form hx-post="/api/install" hx-target="#install-status" class="space-y-3">
             <div>
-                <label class="block text-sm text-[#a6adc8] mb-1">Source URL</label>
+                <label class="block text-sm text-[#a6adc8] mb-1">{{ _("Source URL") }}</label>
                 <input type="text" name="source_url" class="input" placeholder="e.g. https://github.com/user/mcp-server.git or pip:package-name" required>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-sm text-[#a6adc8] mb-1">Source Type</label>
+                    <label class="block text-sm text-[#a6adc8] mb-1">{{ _("Source Type") }}</label>
                     <select name="source_type" class="input">
-                        <option value="auto">Auto-detect</option>
-                        <option value="git">Git</option>
-                        <option value="pip">Pip</option>
-                        <option value="npm">NPM</option>
-                        <option value="docker">Docker</option>
+                        <option value="auto">{{ _("Auto-detect") }}</option>
+                        <option value="git">{{ _("Git") }}</option>
+                        <option value="pip">{{ _("Pip") }}</option>
+                        <option value="npm">{{ _("NPM") }}</option>
+                        <option value="docker">{{ _("Docker") }}</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm text-[#a6adc8] mb-1">Custom Name (optional)</label>
+                    <label class="block text-sm text-[#a6adc8] mb-1">{{ _("Custom Name (optional)") }}</label>
                     <input type="text" name="name" class="input" placeholder="my-server">
                 </div>
             </div>

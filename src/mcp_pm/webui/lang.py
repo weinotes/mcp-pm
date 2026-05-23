@@ -7,7 +7,6 @@ New languages can be added by extending TRANSLATIONS with more keys.
 from __future__ import annotations
 
 import contextvars
-from typing import Any
 
 # Current language - set per-request via middleware
 current_lang: contextvars.ContextVar[str] = contextvars.ContextVar("current_lang", default="en")

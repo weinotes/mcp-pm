@@ -15,24 +15,20 @@ Licensed under MIT License.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
-import os
 import time
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Form, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
-from jinja2 import Environment, FileSystemLoader
 
-from mcp_pm.client import MCPSession, MCPTool
+from mcp_pm.client import MCPSession
 from mcp_pm.config import Config
 from mcp_pm.installer import Installer
-from mcp_pm.registry import CompositeRegistry, RegistryManager, ServerManifest
+from mcp_pm.registry import RegistryManager, ServerManifest
 
 logger = logging.getLogger(__name__)
 

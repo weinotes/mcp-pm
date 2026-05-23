@@ -19,7 +19,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -44,16 +43,14 @@ from rich.tree import Tree
 from mcp_pm.client import MCPSession
 from mcp_pm.config import Config
 from mcp_pm.exceptions import (
-    ClientError,
     ConfigError,
     InstallError,
     McpPmError,
-    RegistryError,
     SandboxError,
 )
-from mcp_pm.installer import Installer, SourceType
+from mcp_pm.installer import Installer
 from mcp_pm.registry import RegistryManager, ServerManifest
-from mcp_pm.sandbox import SandboxLevel, SandboxManager
+from mcp_pm.sandbox import SandboxLevel
 from mcp_pm.server import start as start_proxy_server
 
 # ---------------------------------------------------------------------------

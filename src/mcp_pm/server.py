@@ -23,7 +23,7 @@ import logging
 import uuid
 from typing import Any, AsyncGenerator
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 
 from mcp_pm.client import MCPTool, MCPSession, MCPToolResult

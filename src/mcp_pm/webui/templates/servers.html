@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-[#cdd6f4]">{{ _("Servers") }}</h1>
-            <p class="text-sm text-[#6c7086]">Manage all installed MCP servers</p>
+            <p class="text-sm text-[#6c7086]">{{ _("Manage all installed MCP servers") }}</p>
         </div>
         <div class="flex gap-3">
             <a href="/install" class="btn-primary text-sm flex items-center gap-2">
@@ -22,12 +22,12 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="bg-[#181825] text-[#6c7086] text-xs uppercase">
-                        <th class="text-left py-3 px-4">Status</th>
-                        <th class="text-left py-3 px-4">Name</th>
-                        <th class="text-left py-3 px-4 hidden md:table-cell">Type</th>
-                        <th class="text-left py-3 px-4 hidden lg:table-cell">Source</th>
-                        <th class="text-right py-3 px-4 hidden sm:table-cell">Version</th>
-                        <th class="text-right py-3 px-4">Actions</th>
+                        <th class="text-left py-3 px-4">{{ _("Status") }}</th>
+                        <th class="text-left py-3 px-4">{{ _("Name") }}</th>
+                        <th class="text-left py-3 px-4 hidden md:table-cell">{{ _("Type") }}</th>
+                        <th class="text-left py-3 px-4 hidden lg:table-cell">{{ _("Source") }}</th>
+                        <th class="text-right py-3 px-4 hidden sm:table-cell">{{ _("Version") }}</th>
+                        <th class="text-right py-3 px-4">{{ _("Actions") }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,7 +77,7 @@
                                         hx-target="#servers-table" hx-swap="none">
                                     Uninstall
                                 </button>
-                                <a href="/tools/{{ srv.name }}" class="text-xs text-[#89b4fa] hover:underline">Tools</a>
+                                <a href="/tools/{{ srv.name }}" class="text-xs text-[#89b4fa] hover:underline">{{ _("Tools") }}</a>
                             </div>
                         </td>
                     </tr>
@@ -100,7 +100,7 @@
     <!-- Empty state -->
     <div class="card p-12 text-center">
         <div class="text-5xl mb-4">📦</div>
-        <h2 class="text-xl font-semibold text-[#cdd6f4] mb-2">No Servers Installed</h2>
+        <h2 class="text-xl font-semibold text-[#cdd6f4] mb-2">{{ _("No Servers Installed") }}</h2>
         <p class="text-[#6c7086] mb-6 max-w-md mx-auto">
             MCP servers provide tools and capabilities to your AI applications.
             Install your first server to get started.
