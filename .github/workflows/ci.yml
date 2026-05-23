@@ -43,12 +43,12 @@ jobs:
 
       - name: Lint with ruff
         run: |
-          ruff check .
-          ruff format --check .
+          ruff check src/
+          ruff format --check src/
 
       - name: Type check with mypy
         run: |
-          mypy mcp_pm
+          mypy src/mcp_pm
 
       - name: Test with pytest
         run: |
