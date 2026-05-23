@@ -15,6 +15,7 @@ Licensed under MIT License.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -82,7 +83,7 @@ class McpSoBackend(RegistryBackend):
         if self._client is None:
             self._client = httpx.AsyncClient(
                 headers={"User-Agent": USER_AGENT},
-                timeout=httpx.Timeout(15.0),
+                timeout=httpx.Timeout(4.0),
             )
         return self._client
 
@@ -233,7 +234,7 @@ class GitHubRegistryBackend(RegistryBackend):
         if self._client is None:
             self._client = httpx.AsyncClient(
                 headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
-                timeout=httpx.Timeout(15.0),
+                timeout=httpx.Timeout(4.0),
             )
         return self._client
 
@@ -359,7 +360,7 @@ class SmitheryBackend(RegistryBackend):
         if self._client is None:
             self._client = httpx.AsyncClient(
                 headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
-                timeout=httpx.Timeout(15.0),
+                timeout=httpx.Timeout(4.0),
             )
         return self._client
 
@@ -590,7 +591,7 @@ class NpmRegistryBackend(RegistryBackend):
         if self._client is None:
             self._client = httpx.AsyncClient(
                 headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
-                timeout=httpx.Timeout(10.0),
+                timeout=httpx.Timeout(4.0),
             )
         return self._client
 
@@ -662,7 +663,7 @@ class PyPIRegistryBackend(RegistryBackend):
         if self._client is None:
             self._client = httpx.AsyncClient(
                 headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
-                timeout=httpx.Timeout(10.0),
+                timeout=httpx.Timeout(4.0),
             )
         return self._client
 
@@ -728,44 +729,72 @@ class CompositeRegistry:
         self.backends = backends or []
 
     async def search(self, query: str, limit: int = 20) -> list[ServerManifest]:
-        """Search across all backends, deduplicated by name."""
+        """Search across all backends in parallel, deduplicated by name."""
         seen: set[str] = set()
         results: list[ServerManifest] = []
-        for backend in self.backends:
+
+        async def _search_one(backend: RegistryBackend) -> list[ServerManifest]:
             try:
-                batch = await backend.search(query, limit)
-                for item in batch:
-                    if item.name not in seen:
-                        seen.add(item.name)
-                        results.append(item)
+                return await asyncio.wait_for(
+                    backend.search(query, limit),
+                    timeout=3.0,
+                )
             except Exception:
-                continue
+                return []
+
+        batches = await asyncio.gather(
+            *[_search_one(b) for b in self.backends],
+            return_exceptions=False,
+        )
+        for batch in batches:
+            for item in batch:
+                if item.name not in seen:
+                    seen.add(item.name)
+                    results.append(item)
         return results[:limit]
 
     async def get(self, name: str) -> ServerManifest | None:
-        """Get a server by name across all backends."""
-        for backend in self.backends:
+        """Get a server by name across all backends in parallel, return first match."""
+        async def _get_one(backend: RegistryBackend) -> ServerManifest | None:
             try:
-                result = await backend.get(name)
-                if result:
-                    return result
+                return await asyncio.wait_for(
+                    backend.get(name),
+                    timeout=3.0,
+                )
             except Exception:
-                continue
+                return None
+
+        for result in await asyncio.gather(
+            *[_get_one(b) for b in self.backends],
+            return_exceptions=False,
+        ):
+            if result is not None:
+                return result
         return None
 
     async def popular(self, limit: int = 20) -> list[ServerManifest]:
-        """Get popular servers across all backends, deduplicated."""
+        """Get popular servers across all backends in parallel, deduplicated."""
         seen: set[str] = set()
         results: list[ServerManifest] = []
-        for backend in self.backends:
+
+        async def _popular_one(backend: RegistryBackend) -> list[ServerManifest]:
             try:
-                batch = await backend.popular(limit)
-                for item in batch:
-                    if item.name not in seen:
-                        seen.add(item.name)
-                        results.append(item)
+                return await asyncio.wait_for(
+                    backend.popular(limit),
+                    timeout=3.0,
+                )
             except Exception:
-                continue
+                return []
+
+        batches = await asyncio.gather(
+            *[_popular_one(b) for b in self.backends],
+            return_exceptions=False,
+        )
+        for batch in batches:
+            for item in batch:
+                if item.name not in seen:
+                    seen.add(item.name)
+                    results.append(item)
         return results[:limit]
 
 
