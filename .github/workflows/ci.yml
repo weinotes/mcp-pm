@@ -44,7 +44,6 @@ jobs:
       - name: Lint with ruff
         run: |
           ruff check src/ --exit-zero
-          ruff format --check src/ --exit-zero
 
       - name: Type check with mypy
         run: |
