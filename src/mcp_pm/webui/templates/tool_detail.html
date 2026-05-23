@@ -96,7 +96,7 @@
                         <div class="space-y-3">
                             <textarea id="json-input-{{ loop.index }}"
                                       class="input text-xs h-24"
-                                      placeholder='Enter JSON arguments (e.g. {"key": "value"})'
+                                      placeholder="{{ _('Enter JSON arguments (e.g. {\"key\": \"value\"})') }}"
                                       spellcheck="false">{{ tool.example_args or '{}' }}</textarea>
                             <div class="flex gap-2">
                                 <button class="btn-primary text-sm"
@@ -142,7 +142,7 @@
         if (parent) {
             const formatBtn = document.createElement('button');
             formatBtn.className = 'btn-ghost text-sm';
-            formatBtn.textContent = 'Format JSON';
+            formatBtn.textContent = '{{ _("Format JSON") }}';
             formatBtn.type = 'button';
             formatBtn.onclick = function() {
                 try {

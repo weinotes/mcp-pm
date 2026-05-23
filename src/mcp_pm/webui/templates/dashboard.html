@@ -46,7 +46,7 @@
                         </div>
                         <span class="status-dot {% if srv.status == 'running' %}online{% elif srv.status == 'error' %}offline{% else %}pending{% endif %}"></span>
                     </div>
-                    <p class="text-sm text-[#a6adc8] mb-3 line-clamp-2">{{ srv.description or 'No description' }}</p>
+                    <p class="text-sm text-[#a6adc8] mb-3 line-clamp-2">{{ srv.description or _('No description') }}</p>
                     <div class="flex items-center justify-between">
                         <span class="badge badge-blue">{{ srv.tools_count or 0 }} tools</span>
                         <div class="flex gap-2">

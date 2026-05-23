@@ -406,6 +406,11 @@ class SmitheryBackend(RegistryBackend):
                     stars = int(stars)
                 except (ValueError, TypeError):
                     stars = 0
+            # Smithery uses useCount when stars not available
+            if not stars:
+                uc = raw.get("useCount", 0)
+                if isinstance(uc, (int, float)) and uc > 0:
+                    stars = uc
 
             return ServerManifest(
                 name=name,

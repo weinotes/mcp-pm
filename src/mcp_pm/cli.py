@@ -160,8 +160,13 @@ def install(
     """Install an MCP server from a registry, git repo, or package source."""
     try:
         if not yes:
-            console.print(f"Preparing to install: [bold]{escape(source)}[/bold]")
-            click.confirm("Continue?", default=True, abort=True)
+            from sys import stdin
+            if not stdin.isatty():
+                # Non-interactive mode: auto-proceed
+                console.print(f"Installing: [bold]{escape(source)}[/bold] (non-interactive)")
+            else:
+                console.print(f"Preparing to install: [bold]{escape(source)}[/bold]")
+                click.confirm("Continue?", default=True, abort=True)
 
         # Auto-detect source type if not provided
         detected_type = source_type

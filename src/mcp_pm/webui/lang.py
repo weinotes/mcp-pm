@@ -91,6 +91,8 @@ ALL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "server(s) contributing": "个服务器贡献中",
         "tools": "个工具",
         "Restart": "重启",
+        "No description": "暂无描述",
+        "Format JSON": "格式化 JSON",
         "Language": "语言",
         "English": "English",
         "中文": "中文",
