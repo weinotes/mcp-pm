@@ -87,6 +87,8 @@ ALL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "Test Tool": "测试工具",
         "to test this tool.": "来测试此工具。",
         "Run": "运行",
+        "All Systems Go": "一切正常",
+        "server(s) contributing": "个服务器贡献中",
         "Language": "语言",
         "English": "English",
         "中文": "中文",

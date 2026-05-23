@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}mcp-pm Dashboard{% endblock %}
+{% block title %}{{ _("mcp-pm Dashboard") }}{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
@@ -94,21 +94,21 @@
                 <a href="/logs" class="flex items-center gap-3 p-3 rounded-lg hover:bg-[#313244] transition-colors">
                     <span class="w-8 h-8 rounded-lg bg-[#a6e3a1]/10 flex items-center justify-center text-[#a6e3a1]">📋</span>
                     <div>
-                        <div class="text-sm font-medium">View Logs</div>
-                        <div class="text-xs text-[#6c7086]">Monitor real-time server activity</div>
+                        <div class="text-sm font-medium">{{ _("View Logs") }}</div>
+                        <div class="text-xs text-[#6c7086]">{{ _("Monitor real-time server activity") }}</div>
                     </div>
                 </a>
             </div>
         </div>
         <div class="card p-5">
-            <h3 class="font-semibold text-[#cdd6f4] mb-3">System Info</h3>
+            <h3 class="font-semibold text-[#cdd6f4] mb-3">{{ _("System Info") }}</h3>
             <div class="space-y-2 text-sm">
                 <div class="flex justify-between py-2 border-b border-[#313244]">
-                    <span class="text-[#6c7086]">Version</span>
+                    <span class="text-[#6c7086]">{{ _("Version") }}</span>
                     <span class="text-[#cdd6f4]">0.1.0</span>
                 </div>
                 <div class="flex justify-between py-2 border-b border-[#313244]">
-                    <span class="text-[#6c7086]">Servers</span>
+                    <span class="text-[#6c7086]">{{ _("Servers") }}</span>
                     <span class="text-[#cdd6f4]">{{ servers|length }}</span>
                 </div>
                 <div class="flex justify-between py-2 border-b border-[#313244]">

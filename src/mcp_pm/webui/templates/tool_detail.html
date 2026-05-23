@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}{{ server_name }} Tools — mcp-pm{% endblock %}
+{% block title %}{{ server_name }} {{ _("Tools") }} — mcp-pm{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
     <!-- Breadcrumb -->
     <div class="flex items-center gap-2 text-sm text-[#6c7086]">
-        <a href="/" class="hover:text-[#89b4fa]">Dashboard</a>
+        <a href="/" class="hover:text-[#89b4fa]">{{ _("Dashboard") }}</a>
         <span>/</span>
         <span class="text-[#cdd6f4]">{{ server_name }}</span>
     </div>

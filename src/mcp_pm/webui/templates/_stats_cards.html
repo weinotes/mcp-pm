@@ -5,7 +5,7 @@
         </div>
         <div>
             <div class="text-2xl font-bold text-[#cdd6f4]">{{ stats.servers }}</div>
-            <div class="text-xs text-[#6c7086]">Servers</div>
+            <div class="text-xs text-[#6c7086]">{{ _("Servers") }}</div>
         </div>
     </div>
     <div class="flex gap-1 mt-1">
@@ -21,10 +21,10 @@
         </div>
         <div>
             <div class="text-2xl font-bold text-[#cdd6f4]">{{ stats.tools }}</div>
-            <div class="text-xs text-[#6c7086]">Tools</div>
+            <div class="text-xs text-[#6c7086]">{{ _("Tools") }}</div>
         </div>
     </div>
-    <div class="text-xs text-[#6c7086]">{{ stats.servers }} server(s) contributing</div>
+    <div class="text-xs text-[#6c7086]">{{ stats.servers }} {{ _("server(s) contributing") }}</div>
 </div>
 
 <div class="card p-5">
@@ -34,12 +34,12 @@
         </div>
         <div>
             <div class="text-2xl font-bold text-[#cdd6f4]">{{ stats.online }}</div>
-            <div class="text-xs text-[#6c7086]">Online</div>
+            <div class="text-xs text-[#6c7086]">{{ _("Online") }}</div>
         </div>
     </div>
     <div class="flex gap-1 mt-1">
         <span class="badge {% if stats.online == stats.servers %}badge-green{% else %}badge-yellow{% endif %}">
-            {% if stats.online == stats.servers %}All Systems Go{% else %}{{ stats.online }}/{{ stats.servers }} Online{% endif %}
+            {% if stats.online == stats.servers %}{{ _("All Systems Go") }}{% else %}{{ stats.online }}/{{ stats.servers }} {{ _("Online") }}{% endif %}
         </span>
     </div>
 </div>
@@ -51,8 +51,8 @@
         </div>
         <div>
             <div class="text-2xl font-bold text-[#cdd6f4]">{{ stats.uptime }}</div>
-            <div class="text-xs text-[#6c7086]">Uptime</div>
+            <div class="text-xs text-[#6c7086]">{{ _("Uptime") }}</div>
         </div>
     </div>
-    <div class="text-xs text-[#6c7086]">Since last restart</div>
+    <div class="text-xs text-[#6c7086]">{{ _("Since last restart") }}</div>
 </div>
