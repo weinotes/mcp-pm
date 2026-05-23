@@ -307,9 +307,14 @@ async def logs_page(
 
 
 @app.get("/api/servers")
-async def api_servers() -> list[dict[str, Any]]:
-    """Return server list as JSON (for HTMX partial rendering)."""
-    return _get_installed_servers()
+async def api_servers(request: Request) -> HTMLResponse:
+    """Return server list as HTML partial for HTMX."""
+    servers = _get_installed_servers()
+    return templates.TemplateResponse(
+        request,
+        "_server_cards.html",
+        {"servers": servers},
+    )
 
 
 @app.get("/api/tools")

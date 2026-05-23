@@ -1,0 +1,36 @@
+{% if servers %}
+    {% for srv in servers %}
+    <div class="card card-hover p-5">
+        <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🖥</span>
+                <div>
+                    <div class="font-semibold text-[#cdd6f4]">{{ srv.name }}</div>
+                    <div class="text-xs text-[#6c7086]">{{ srv.source_type }}</div>
+                </div>
+            </div>
+            <span class="status-dot {% if srv.status == 'running' %}online{% elif srv.status == 'error' %}offline{% else %}pending{% endif %}"></span>
+        </div>
+        <p class="text-sm text-[#a6adc8] mb-3 line-clamp-2">{{ srv.description or '' }}</p>
+        <div class="flex items-center justify-between">
+            <span class="badge badge-blue">{{ srv.tools_count or 0 }} {{ _("tools") }}</span>
+            <div class="flex gap-2">
+                <button class="text-xs text-[#89b4fa] hover:underline"
+                        hx-post="/api/servers/{{ srv.name }}/restart"
+                        hx-confirm="Restart '{{ srv.name }}'?"
+                        hx-target="#servers-grid" hx-swap="none">
+                    {{ _("Restart") }}
+                </button>
+                <a href="/tools/{{ srv.name }}" class="text-xs text-[#a6e3a1] hover:underline">{{ _("Tools") }}</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="col-span-full card p-8 text-center">
+        <div class="text-4xl mb-3">📦</div>
+        <h3 class="text-lg font-semibold text-[#cdd6f4] mb-1">{{ _("No Servers Installed") }}</h3>
+        <p class="text-sm text-[#6c7086] mb-4">{{ _("Get started by installing your first MCP server.") }}</p>
+        <a href="/install" class="btn-primary inline-block">{{ _("Browse Registry") }}</a>
+    </div>
+{% endif %}

@@ -89,6 +89,8 @@ ALL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "Run": "运行",
         "All Systems Go": "一切正常",
         "server(s) contributing": "个服务器贡献中",
+        "tools": "个工具",
+        "Restart": "重启",
         "Language": "语言",
         "English": "English",
         "中文": "中文",
