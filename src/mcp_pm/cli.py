@@ -396,7 +396,7 @@ def _list_tools_for_server(server_name: str) -> list[dict[str, Any]]:
         if command:
             _async_run(session.start_server(server_name, command))
             tools_info = []
-            for srv_name, tool in session.get_all_tools():
+            for _srv_name, tool in session.get_all_tools():
                 tools_info.append({
                     "name": tool.name,
                     "description": tool.description[:80] if tool.description else "",
@@ -412,7 +412,6 @@ def _list_tools_for_server(server_name: str) -> list[dict[str, Any]]:
 def _build_launch_command(manifest: dict[str, Any]) -> list[str] | None:
     """Build a command list to launch an installed server."""
     source_type = manifest.get("source_type", "")
-    source_url = manifest.get("source_url", "")
     name = manifest.get("name", "")
 
     if source_type == "git":
@@ -672,10 +671,8 @@ def serve(port: int, host: str, openai: bool, log_level: str) -> None:
         raise SystemExit(1) from exc
     finally:
         if _session_for_serve is not None:
-            try:
+            with contextlib.suppress(Exception):
                 _async_run(_session_for_serve.stop_all())
-            except Exception:
-                pass
             _session_for_serve = None
 
 

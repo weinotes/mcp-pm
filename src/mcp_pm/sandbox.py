@@ -18,6 +18,7 @@ Licensed under MIT License.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import enum
 import os
 import resource
@@ -223,7 +224,7 @@ class SandboxManager:
                 env=merged_env,
             )
         except FileNotFoundError:
-            raise SandboxError(f"Command not found: {command[0]}")
+            raise SandboxError(f"Command not found: {command[0]}") from None
         except OSError as exc:
             raise SandboxError(f"Failed to launch '{command[0]}': {exc}") from exc
 
@@ -294,7 +295,7 @@ class SandboxManager:
                 preexec_fn=_prepare_subprocess,
             )
         except FileNotFoundError:
-            raise SandboxError(f"Command not found: {command[0]}")
+            raise SandboxError(f"Command not found: {command[0]}") from None
         except OSError as exc:
             raise SandboxError(f"Failed to launch '{command[0]}': {exc}") from exc
 
@@ -388,7 +389,7 @@ class SandboxManager:
                 stderr=asyncio.subprocess.PIPE,
             )
         except FileNotFoundError:
-            raise SandboxError("Docker not found — is it installed?")
+            raise SandboxError("Docker not found — is it installed?") from None
         except OSError as exc:
             raise SandboxError(f"Failed to run docker: {exc}") from exc
 

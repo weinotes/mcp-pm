@@ -186,10 +186,10 @@ async def tool_detail(request: Request, name: str) -> HTMLResponse:
             if command:
                 await session.start_server(name, command)
                 all_tools = session.get_all_tools()
-                for srv_name, tool in all_tools:
+                for _srv_name, tool in all_tools:
                     params = dict(tool.parameters)
                     props = params.get("properties", {})
-                    required = params.get("required", [])
+                    # required list available via params.get("required", [])
                     sample: dict[str, Any] = {}
                     for pname, pschema in props.items():
                         if isinstance(pschema, dict):
@@ -670,7 +670,6 @@ def _build_launch_command(manifest: dict[str, Any]) -> list[str] | None:
     import sys
 
     source_type = manifest.get("source_type", "")
-    source_url = manifest.get("source_url", "")
     name = manifest.get("name", "")
 
     if source_type == "git":
