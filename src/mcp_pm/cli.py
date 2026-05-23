@@ -1028,6 +1028,33 @@ def update(yes: bool) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Shell completion
+# ---------------------------------------------------------------------------
+
+
+@cli.command()
+@click.argument("shell", type=click.Choice(["zsh", "bash", "fish"]), default="zsh")
+def completion(shell: str) -> None:
+    """Generate shell completion script.
+
+    Usage:
+
+        eval "$(mcp completion zsh)"   # zsh
+        eval "$(mcp completion bash)"  # bash
+        mcp completion fish > ~/.config/fish/completions/mcp.fish  # fish
+    """
+    import click.shell_completion
+
+    cls_map = {
+        "zsh": click.shell_completion.ZshComplete,
+        "bash": click.shell_completion.BashComplete,
+        "fish": click.shell_completion.FishComplete,
+    }
+    comp = cls_map[shell](cli, {}, "mcp", "")
+    console.print(comp.source())
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 

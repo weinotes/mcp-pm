@@ -33,10 +33,11 @@
 
 ---
 
-https://github.com/user-attachments/assets/placeholder
+<p align="center">
+  <img src="demo.svg" alt="mcp-pm demo" width="100%"/>
+</p>
 
 ---
-
 ## ✨ Quick Start
 
 ```bash
