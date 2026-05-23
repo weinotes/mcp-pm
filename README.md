@@ -1,5 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/mcp--pm-v0.1.0-blue?style=flat-square" alt="version" />
+  <img src="https://img.shields.io/pypi/v/mcp-pm?style=flat-square" alt="pypi" />
+  <img src="https://img.shields.io/pypi/dm/mcp-pm?style=flat-square" alt="downloads" />
   <img src="https://img.shields.io/badge/python-%3E%3D3.11-green?style=flat-square" alt="python" />
   <img src="https://img.shields.io/github/license/weinotes/mcp-pm?style=flat-square" alt="license" />
   <img src="https://img.shields.io/badge/MCP-Compatible-8A2BE2?style=flat-square" alt="mcp" />

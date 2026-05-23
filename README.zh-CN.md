@@ -1,5 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/mcp--pm-v0.1.0-blue?style=flat-square" alt="版本" />
+  <img src="https://img.shields.io/pypi/v/mcp-pm?style=flat-square" alt="pypi" />
+  <img src="https://img.shields.io/pypi/dm/mcp-pm?style=flat-square" alt="下载量" />
   <img src="https://img.shields.io/badge/python-%3E%3D3.11-green?style=flat-square" alt="python" />
   <img src="https://img.shields.io/github/license/weinotes/mcp-pm?style=flat-square" alt="许可证" />
   <img src="https://img.shields.io/badge/MCP-兼容-8A2BE2?style=flat-square" alt="mcp" />
