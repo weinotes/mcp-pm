@@ -4,6 +4,8 @@
   <img src="https://img.shields.io/github/license/weinotes/mcp-pm?style=flat-square" alt="license" />
   <img src="https://img.shields.io/badge/MCP-Compatible-8A2BE2?style=flat-square" alt="mcp" />
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="prs" />
+  <img src="https://img.shields.io/badge/12-subcommands-34d399?style=flat-square" alt="subcommands" />
+  <img src="https://img.shields.io/badge/5-registries-fbbf24?style=flat-square" alt="registries" />
 </p>
 
 <div align="center">
@@ -12,35 +14,34 @@
 
 </div>
 
-<h1 align="center">mcp-pm — Homebrew for MCP Servers</h1>
+<h1 align="center">⛭ mcp-pm — Homebrew for MCP Servers</h1>
 
 <p align="center">
   <em>A CLI package manager for the Model Context Protocol ecosystem. Install, search, serve, and manage MCP servers with a single command.</em>
 </p>
 
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-features">Features</a> •
+  <a href="#-commands">Commands</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-comparison">Comparison</a> •
+  <a href="#-registry-backends">Registries</a>
+</p>
+
 ---
 
-## Why mcp-pm?
+https://github.com/user-attachments/assets/placeholder
 
-The MCP ecosystem is growing fast, but it's fragmented. Servers live across npm, PyPI, GitHub repos, and random URLs. There's no standardized way to **discover, install, configure, and run** them.
+---
 
-**mcp-pm** solves this by acting as a central package manager — think Homebrew, but for MCP servers.
-
-| Problem | mcp-pm Solution |
-|---|---|
-| Where to find MCP servers? | `mcp search` + `mcp explore` (integrated registry) |
-| How to install? | `mcp install <server>` — one command |
-| How to configure? | Auto-generates config files |
-| How to run safely? | `mcp sandbox <server>` — isolated execution |
-| How to run locally? | `mcp serve <server>` — starts the process |
-
-## Quick Start
+## ✨ Quick Start
 
 ```bash
 # Install
 pip install mcp-pm
 
-# Search for MCP servers
+# Search for MCP servers across 5 registries (Smithery, npm, PyPI, built-in...)
 mcp search filesystem
 
 # Install a server
@@ -49,78 +50,173 @@ mcp install mcp-server-filesystem
 # List installed servers
 mcp list
 
-# Serve a server locally
-mcp serve mcp-server-filesystem
-
-# Explore the registry interactively
+# Explore the Web UI dashboard
 mcp explore
 
-# View configuration
-mcp config
+# Run a server in an isolated sandbox
+mcp sandbox my-server --level docker
+
+# Start an OpenAI-compatible HTTP proxy
+mcp serve
 ```
 
-## Features
+> **No servers installed yet?** Run `mcp search database` to discover servers from the community registry, or `mcp explore` to browse them visually.
+
+---
+
+## 🚀 Features
+
+| Feature | Description |
+|---------|-------------|
+| **🔍 Multi-Registry Search** | Search across **5 registries** simultaneously — Smithery (5,000+ servers), npm, PyPI, built-in curated list |
+| **📦 One-Command Install** | `mcp install <server>` — installs from npm, pip, git, or Docker |
+| **🔒 Sandbox Isolation** | Run untrusted servers in isolated environments (subprocess, Docker) |
+| **🌐 Web UI Dashboard** | Beautiful dark-themed HTMX dashboard for visual management |
+| **⚡ OpenAI Proxy** | Expose all installed MCP tools as an OpenAI-compatible API |
+| **🛡️ `mcp doctor`** | Diagnostic tool that checks your entire MCP setup |
+| **🔧 12 Commands** | Full lifecycle management — install, uninstall, update, list, search, info, explore, serve, sandbox, config, doctor, run |
+| **🌍 Multi-language UI** | Web UI supports English and 中文 (Chinese), extensible to any language |
+| **📝 YAML Config** | Human-readable configuration at `~/.mcp-pm/config.yaml` |
+| **🎨 Beautiful CLI** | Rich terminal output with tables, colors, and progress spinners |
+
+---
+
+## 🎮 Commands
 
 | Command | Description | Example |
-|---|---|---|
-| `mcp install` | Install an MCP server from the registry | `mcp install mcp-server-filesystem` |
-| `mcp list` | List all installed MCP servers | `mcp list` |
-| `mcp search` | Search the registry for MCP servers | `mcp search database` |
-| `mcp explore` | Interactive TUI browser for discovery | `mcp explore` |
-| `mcp serve` | Start a local MCP server process | `mcp serve my-server` |
-| `mcp config` | View or edit mcp-pm configuration | `mcp config --edit` |
-| `mcp sandbox` | Run a server in an isolated sandbox | `mcp sandbox untrusted-server` |
+|---------|-------------|---------|
+| `mcp install` | Install an MCP server | `mcp install mcp-server-filesystem` |
+| `mcp uninstall` | Remove an installed server | `mcp uninstall my-server` |
+| `mcp update` | Update all installed servers | `mcp update` |
+| `mcp list` | List installed servers and tools | `mcp list` |
+| `mcp search` | Search across all registries | `mcp search database` |
+| `mcp info` | Show detailed server info | `mcp info github` |
+| `mcp explore` | Launch the Web UI dashboard | `mcp explore` |
+| `mcp serve` | Start HTTP proxy server | `mcp serve` |
+| `mcp sandbox` | Run server in sandbox | `mcp sandbox my-server --level docker` |
+| `mcp config` | Manage configuration | `mcp config get servers` |
+| `mcp doctor` | Diagnose installation health | `mcp doctor` |
+| `mcp run` | Run an MCP tool directly | `mcp run my-server tool-name` |
 
-## Architecture
+---
+
+## 🏗️ Architecture
 
 ```
-┌──────────────────────────────────────────────┐
-│              User (CLI / Terminal)             │
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────┐
-│              mcp CLI (click + rich)           │
-│  ┌──────┬──────┬──────┬──────┬──────┬──────┐ │
-│  │install│ list │search│explore│serve │config│ │
-│  │ sandbox                                    │
-│  └──────┴──────┴──────┴──────┴──────┴──────┘ │
-└──────────────────┬───────────────────────────┘
-                   │
-        ┌──────────┴──────────┐
-        ▼                     ▼
-┌───────────────┐    ┌────────────────┐
-│ Package       │    │ Registry API   │
-│ Manager Core  │    │ (FastAPI)      │
-│ ┌───────────┐ │    │ ┌────────────┐ │
-│ │ Config    │ │    │ │ Resolver   │ │
-│ │ (YAML)    │ │    │ │ Metadata   │ │
-│ │ Sandbox   │ │    │ │ Search     │ │
-│ │ Isolation │ │    │ └────────────┘ │
-│ └───────────┘ │    └────────────────┘
-└───────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    User Interfaces                          │
+│  ┌──────────┐  ┌────────────┐  ┌──────────┐  ┌──────────┐  │
+│  │  CLI     │  │ Web UI     │  │ VS Code  │  │ CI/CD    │  │
+│  │ Terminal │  │ Dashboard  │  │ Ext.     │  │ Actions  │  │
+│  └────┬─────┘  └─────┬──────┘  └────┬─────┘  └────┬─────┘  │
+└───────┼──────────────┼──────────────┼──────────────┼────────┘
+        │              │              │              │
+        ▼              ▼              ▼              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    CLI Core (click + rich)                   │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │    12 Subcommands: install · uninstall · list · search  ││
+│  │    info · explore · serve · sandbox · config · update   ││
+│  │    doctor · run                                          ││
+│  └─────────────────────────────────────────────────────────┘│
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐ │
+│  │ Installer│  │ Config   │  │ Sandbox  │  │ HTTP Proxy  │ │
+│  │ (multi-  │  │ (YAML)   │  │ (Docker  │  │ (OpenAI     │ │
+│  │  source) │  │          │  │  isol.)  │  │  Compat.)   │ │
+│  └──────────┘  └──────────┘  └──────────┘  └─────────────┘ │
+└───────────────────┬─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Registry Integrations                       │
+│  ┌────────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │ Smithery   │  │ npm      │  │ PyPI     │  │ Built-in │  │
+│  │ 5,000+ srvs│  │ Registry │  │ Registry │  │ 27 srvs  │  │
+│  └────────────┘  └──────────┘  └──────────┘  └──────────┘  │
+└───────────────────┬─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Execution Environment                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │ Subprocess   │  │ Docker       │  │ OpenAI API Proxy  │  │
+│  │ Direct Spawn │  │ Sandbox      │  │ MCP → OpenAI     │  │
+│  └──────────────┘  └──────────────┘  └───────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Comparison
+---
+
+## 📦 Registry Backends
+
+mcp-pm aggregates servers from **5 registries** simultaneously:
+
+| Registry | Status | Servers | Type |
+|----------|--------|---------|------|
+| **Built-in** | ✅ Always available | 27 curated | Offline |
+| **Smithery** ([smithery.ai](https://smithery.ai)) | ✅ Online | 5,000+ | API |
+| **npm** ([npmjs.com](https://npmjs.com)) | ✅ Online | All mcp-server packages | API |
+| **PyPI** ([pypi.org](https://pypi.org)) | ✅ Online | All MCP Python packages | API |
+| MCP.so | ⚠️ Deprecated (API retired) | — | Graceful fallback |
+| GitHub Registry | ⚠️ Temporarily unavailable | — | Graceful fallback |
+
+All backends are queried **in parallel** with a 3-second timeout — you always get results fast.
+
+---
+
+## 🔄 Comparison
 
 | Feature | **mcp-pm** | MCP.so | Smithery | GitHub Registry |
-|---|---|---|---|---|
-| CLI-first | :white_check_mark: | :x: | :x: | :x: |
-| Offline mode | :white_check_mark: | :x: | :x: | :x: |
-| Sandbox isolation | :white_check_mark: | :x: | :x: | :x: |
-| Interactive TUI | :white_check_mark: | :x: | :x: | :x: |
-| Auto-config generation | :white_check_mark: | :x: | :x: | :x: |
-| Open-source + self-hostable | :white_check_mark: | :x: | :x: | :x: |
-| Server-side registry | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| Web UI | :x: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|---------|:----------:|:------:|:--------:|:---------------:|
+| CLI-first | ✅ | ❌ | ❌ | ❌ |
+| Offline mode (built-in index) | ✅ | ❌ | ❌ | ❌ |
+| Sandbox isolation | ✅ | ❌ | ❌ | ❌ |
+| Interactive TUI | ✅ | ❌ | ❌ | ❌ |
+| Multi-registry search | ✅ | ❌ | ❌ | ❌ |
+| Web UI dashboard | ✅ | ✅ | ✅ | ✅ |
+| Auto-config generation | ✅ | ❌ | ❌ | ❌ |
+| Open-source + self-hostable | ✅ | ❌ | ❌ | ✅ |
+| OpenAI-compatible proxy | ✅ | ❌ | ❌ | ❌ |
+| 12 subcommands | ✅ | — | — | — |
 
-## Contributing
+---
+
+## 🛠️ Development
+
+```bash
+# Clone and set up
+git clone https://github.com/weinotes/mcp-pm.git
+cd mcp-pm
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev,web]"
+
+# Run tests
+python -m pytest tests/ -v --tb=short
+
+# Start Web UI
+mcp explore
+
+# Lint
+ruff check .
+ruff format --check .
+```
+
+---
+
+## 🤝 Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## License
+- **Bug reports**: [Open an issue](https://github.com/weinotes/mcp-pm/issues/new?template=bug_report.md)
+- **Feature requests**: [Start a discussion](https://github.com/weinotes/mcp-pm/issues/new?template=feature_request.md)
+- **Security issues**: See [SECURITY.md](SECURITY.md)
 
-MIT License — Copyright (c) 2025-2026 Davey Wong &lt;wgwcko@gmail.com&gt;
+---
+
+## 📄 License
+
+MIT License — Copyright (c) 2025-2026 Davey Wong <wgwcko@gmail.com>
 
 ---
 

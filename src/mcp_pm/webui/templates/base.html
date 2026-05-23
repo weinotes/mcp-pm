@@ -94,8 +94,8 @@
                 <!-- Language switcher -->
                 <div class="flex items-center gap-1 text-xs">
                     {% set _lang = get_language() %}
-                    <a href="?lang=en" class="px-2 py-1 rounded {% if _lang == 'en' %}bg-[#313244] text-[#cdd6f4]{% else %}text-[#6c7086] hover:text-[#cdd6f4]{% endif %}">EN</a>
-                    <a href="?lang=zh-CN" class="px-2 py-1 rounded {% if _lang == 'zh-CN' %}bg-[#313244] text-[#cdd6f4]{% else %}text-[#6c7086] hover:text-[#cdd6f4]{% endif %}">中文</a>
+                    <a href="#" data-lang="en" class="px-2 py-1 rounded {% if _lang == 'en' %}bg-[#313244] text-[#cdd6f4]{% else %}text-[#6c7086] hover:text-[#cdd6f4]{% endif %}">EN</a>
+                    <a href="#" data-lang="zh-CN" class="px-2 py-1 rounded {% if _lang == 'zh-CN' %}bg-[#313244] text-[#cdd6f4]{% else %}text-[#6c7086] hover:text-[#cdd6f4]{% endif %}">中文</a>
                 </div>
                 <div class="text-xs text-[#6c7086]">
                     mcp-pm v0.1.0
@@ -146,6 +146,36 @@
         document.body.addEventListener('htmx:responseError', function(evt) {
             console.error('HTMX error:', evt.detail);
         });
+
+        // Language persistence: set cookie on language link click
+        document.querySelectorAll('[data-lang]').forEach(function(el) {
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.cookie = 'lang=' + this.dataset.lang + '; path=/; max-age=31536000';
+                // Reload with new lang param
+                var url = new URL(window.location.href);
+                url.searchParams.set('lang', this.dataset.lang);
+                window.location.href = url.toString();
+            });
+        });
+
+        // Ensure all internal links preserve the lang param
+        (function() {
+            var lang = new URL(window.location.href).searchParams.get('lang');
+            if (!lang) {
+                // Try reading from cookie
+                var match = document.cookie.match(/lang=([^;]+)/);
+                if (match) lang = match[1];
+            }
+            if (lang && lang !== 'en') {
+                document.querySelectorAll('a[href^="/"]').forEach(function(a) {
+                    if (a.href.indexOf('lang=') === -1 && !a.hasAttribute('data-lang')) {
+                        var sep = a.href.indexOf('?') === -1 ? '?' : '&';
+                        a.href += sep + 'lang=' + lang;
+                    }
+                });
+            }
+        })();
     </script>
     {% block scripts %}{% endblock %}
 </body>
