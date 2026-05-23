@@ -4,13 +4,13 @@ Thank you for using mcp-pm! We're here to help. Below are the available support 
 
 ## GitHub Issues
 
-- **Bug Reports**: [Open a bug report](https://github.com/daveywong/mcp-pm/issues/new?template=bug_report.md)
-- **Feature Requests**: [Request a feature](https://github.com/daveywong/mcp-pm/issues/new?template=feature_request.md)
-- **General Issues**: Browse or open an issue at [github.com/daveywong/mcp-pm/issues](https://github.com/daveywong/mcp-pm/issues)
+- **Bug Reports**: [Open a bug report](https://github.com/weinotes/mcp-pm/issues/new?template=bug_report.md)
+- **Feature Requests**: [Request a feature](https://github.com/weinotes/mcp-pm/issues/new?template=feature_request.md)
+- **General Issues**: Browse or open an issue at [github.com/weinotes/mcp-pm/issues](https://github.com/weinotes/mcp-pm/issues)
 
 ## GitHub Discussions
 
-For questions, ideas, and community support, join our [GitHub Discussions](https://github.com/daveywong/mcp-pm/discussions).
+For questions, ideas, and community support, join our [GitHub Discussions](https://github.com/weinotes/mcp-pm/discussions).
 
 - Ask questions and get help from the community
 - Share your projects and use cases
@@ -30,9 +30,9 @@ For private or sensitive inquiries:
 
 ## Before Reaching Out
 
-1. Check the [README](README.md) and [documentation](https://github.com/daveywong/mcp-pm)
-2. Search [existing issues](https://github.com/daveywong/mcp-pm/issues) for similar problems
-3. Search [discussions](https://github.com/daveywong/mcp-pm/discussions) for answers
+1. Check the [README](README.md) and [documentation](https://github.com/weinotes/mcp-pm)
+2. Search [existing issues](https://github.com/weinotes/mcp-pm/issues) for similar problems
+3. Search [discussions](https://github.com/weinotes/mcp-pm/discussions) for answers
 
 ---
 

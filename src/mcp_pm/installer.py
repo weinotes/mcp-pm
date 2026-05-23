@@ -1,3 +1,7 @@
+# Copyright (c) 2025-2026 Davey Wong <wgwcko@gmail.com>
+# Author: Davey Wong <wgwcko@gmail.com> (https://www.guangweiblog.com)
+# Licensed under MIT License.
+
 """
 Installer engine — handles installing, uninstalling, and updating MCP servers.
 

@@ -1,3 +1,7 @@
+# Copyright (c) 2025-2026 Davey Wong <wgwcko@gmail.com>
+# Author: Davey Wong <wgwcko@gmail.com> (https://www.guangweiblog.com)
+# Licensed under MIT License.
+
 """MCP client — connects to MCP servers via stdio or HTTP transport.
 
 Handles JSON-RPC message exchange, tool discovery, and tool invocation
