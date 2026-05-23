@@ -394,13 +394,13 @@ async def api_logs(
 
 
 @app.get("/api/stats")
-async def api_stats() -> dict[str, Any]:
-    """Return statistics for the dashboard cards."""
+async def api_stats(request: Request) -> HTMLResponse:
+    """Return statistics as HTML partial for the dashboard cards."""
     servers = _get_installed_servers()
     total_tools = sum(s.get("tools_count", 0) for s in servers)
     running = sum(1 for s in servers if s.get("status") == "running")
 
-    return {
+    stats = {
         "servers": len(servers),
         "tools": total_tools,
         "online": running,
@@ -408,6 +408,12 @@ async def api_stats() -> dict[str, Any]:
         "stopped": len(servers) - running,
         "uptime": _uptime(),
     }
+
+    return templates.TemplateResponse(
+        request,
+        "_stats_cards.html",
+        {"stats": stats},
+    )
 
 
 @app.get("/api/search")
