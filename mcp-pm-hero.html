@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mcp-pm README Hero</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px;
+}
+.hero {
+  max-width: 900px;
+  width: 100%;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  border-radius: 20px;
+  border: 1px solid #1e293b;
+  padding: 50px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 50%, rgba(34, 211, 238, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 70% 50%, rgba(52, 211, 153, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+.badge-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  position: relative;
+}
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.badge-blue { background: rgba(34, 211, 238, 0.15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); }
+.badge-green { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+.badge-purple { background: rgba(167, 139, 250, 0.15); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.3); }
+.badge-amber { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  position: relative;
+}
+.logo-icon {
+  width: 55px;
+  height: 55px;
+  background: linear-gradient(135deg, #22d3ee, #34d399);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+.logo-text h1 {
+  font-size: 32px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.03em;
+}
+.logo-text .tagline {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+.logo-text .tagline em {
+  color: #22d3ee;
+  font-style: normal;
+}
+
+.terminal {
+  margin-top: 30px;
+  background: #020617;
+  border-radius: 12px;
+  border: 1px solid #1e293b;
+  overflow: hidden;
+  position: relative;
+}
+.terminal-header {
+  background: #0f172a;
+  padding: 10px 16px;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.terminal-dot.red { background: #ef4444; }
+.terminal-dot.yellow { background: #eab308; }
+.terminal-dot.green { background: #22c55e; }
+.terminal-title {
+  font-size: 11px;
+  color: #64748b;
+  margin-left: 8px;
+}
+.terminal-body {
+  padding: 20px 24px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #94a3b8;
+}
+.terminal-body .prompt {
+  color: #22d3ee;
+}
+.terminal-body .cmd {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+.terminal-body .output {
+  color: #94a3b8;
+}
+.terminal-body .highlight {
+  color: #34d399;
+}
+.terminal-body .keyword {
+  color: #fbbf24;
+}
+.line { margin-bottom: 4px; }
+.line:last-child { margin-bottom: 0; }
+.cursor-blink {
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  background: #22d3ee;
+  animation: blink 1s step-end infinite;
+  vertical-align: text-bottom;
+  margin-left: 2px;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 30px;
+  position: relative;
+}
+.feature-item {
+  padding: 14px 16px;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.feature-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.feature-text {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+.feature-text strong {
+  color: white;
+  font-weight: 600;
+}
+
+.cta {
+  margin-top: 35px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  position: relative;
+}
+.cta-btn {
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.cta-primary {
+  background: linear-gradient(135deg, #22d3ee, #34d399);
+  color: #0f172a;
+}
+.cta-secondary {
+  background: rgba(30, 41, 59, 0.5);
+  color: #94a3b8;
+  border: 1px solid #1e293b;
+}
+
+.footer-text {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 11px;
+  color: #475569;
+  position: relative;
+}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="badge-row">
+    <span class="badge badge-blue">🔧 v0.1.0</span>
+    <span class="badge badge-green">🐍 Python 3.11+</span>
+    <span class="badge badge-purple">📦 12 Commands</span>
+    <span class="badge badge-amber">⚡ MCP Compatible</span>
+  </div>
+
+  <div class="logo">
+    <div class="logo-icon">⛭</div>
+    <div class="logo-text">
+      <h1>mcp-pm</h1>
+      <div class="tagline"><em>Homebrew</em> for MCP Servers</div>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <div class="terminal-header">
+      <div class="terminal-dot red"></div>
+      <div class="terminal-dot yellow"></div>
+      <div class="terminal-dot green"></div>
+      <span class="terminal-title">bash — mcp-pm demo</span>
+    </div>
+    <div class="terminal-body">
+      <div class="line">
+        <span class="prompt">$ </span>
+        <span class="cmd">pip install mcp-pm</span>
+      </div>
+      <div class="line">
+        <span class="output">Successfully installed mcp-pm-0.1.0</span>
+      </div>
+      <div class="line" style="margin-top: 10px;">
+        <span class="prompt">$ </span>
+        <span class="cmd">mcp search filesystem</span>
+      </div>
+      <div class="line" style="margin-top: 10px;">
+        <span class="output">╭──────────────────────┬───────────────────────────────┬───────╮</span>
+      </div>
+      <div class="line">
+        <span class="output">│ <span class="highlight">Name</span>                 │ <span class="highlight">Description</span>                   │ <span class="highlight">Stars</span> │</span>
+      </div>
+      <div class="line">
+        <span class="output">├──────────────────────┼───────────────────────────────┼───────┤</span>
+      </div>
+      <div class="line">
+        <span class="output">│ <span class="keyword">exa</span>                  │ Fast, intelligent web search  │     - │</span>
+      </div>
+      <div class="line">
+        <span class="output">│ <span class="keyword">gmail</span>                │ Manage Gmail end-to-end       │     - │</span>
+      </div>
+      <div class="line">
+        <span class="output">│ <span class="keyword">brave</span>                │ Search with Brave's index     │     - │</span>
+      </div>
+      <div class="line">
+        <span class="output">│ <span class="keyword">googlesheets</span>         │ Read, write spreadsheet data  │     - │</span>
+      </div>
+      <div class="line">
+        <span class="output">│ <span class="keyword">github</span>               │ Manage repos, issues, PRs     │     - │</span>
+      </div>
+      <div class="line">
+        <span class="output">╰──────────────────────┴───────────────────────────────┴───────╯</span>
+      </div>
+      <div class="line" style="margin-top: 10px;">
+        <span class="output"><span class="highlight">5 result(s)</span> from Smithery Registry</span>
+      </div>
+      <div class="line" style="margin-top: 10px;">
+        <span class="prompt">$ </span>
+        <span class="cmd">mcp install github</span>
+        <span class="cursor-blink"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-item">
+      <span class="feature-icon">🔍</span>
+      <span class="feature-text"><strong>Search</strong> — Discover MCP servers from multi-registry</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">📦</span>
+      <span class="feature-text"><strong>Install</strong> — One command from any source</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🔒</span>
+      <span class="feature-text"><strong>Sandbox</strong> — Secure isolation for untrusted servers</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🌐</span>
+      <span class="feature-text"><strong>Web UI</strong> — Beautiful HTMX dashboard included</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">⚡</span>
+      <span class="feature-text"><strong>Serve</strong> — OpenAI-compatible HTTP proxy</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🛠️</span>
+      <span class="feature-text"><strong>12 Commands</strong> — Complete MCP lifecycle management</span>
+    </div>
+  </div>
+
+  <div class="cta">
+    <a class="cta-btn cta-primary">🚀 pip install mcp-pm</a>
+    <a class="cta-btn cta-secondary">⭐ Star on GitHub</a>
+  </div>
+
+  <div class="footer-text">
+    MIT License · Made with ❤️ by Davey Wong
+  </div>
+</div>
+</body>
+</html>

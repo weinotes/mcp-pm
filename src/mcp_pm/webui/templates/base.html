@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="zh-CN" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}mcp-pm Dashboard{% endblock %}</title>
+    <title>{% block title %}{{ _("mcp-pm Dashboard") }}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <script>
@@ -90,8 +90,16 @@
                     Install
                 </a>
             </nav>
-            <div class="p-4 border-t border-[#313244] text-xs text-[#6c7086]">
-                mcp-pm v0.1.0
+            <div class="p-4 border-t border-[#313244] space-y-2">
+                <!-- Language switcher -->
+                <div class="flex items-center gap-1 text-xs">
+                    {% set _lang = get_language() %}
+                    <a href="?lang=en" class="px-2 py-1 rounded {% if _lang == 'en' %}bg-[#313244] text-[#cdd6f4]{% else %}text-[#6c7086] hover:text-[#cdd6f4]{% endif %}">EN</a>
+                    <a href="?lang=zh-CN" class="px-2 py-1 rounded {% if _lang == 'zh-CN' %}bg-[#313244] text-[#cdd6f4]{% else %}text-[#6c7086] hover:text-[#cdd6f4]{% endif %}">中文</a>
+                </div>
+                <div class="text-xs text-[#6c7086]">
+                    mcp-pm v0.1.0
+                </div>
             </div>
         </aside>
 
@@ -109,11 +117,11 @@
         <!-- Mobile menu overlay -->
         <div id="mobile-menu" class="md:hidden fixed inset-0 z-40 bg-[#11111b]/95 hidden">
             <div class="p-4 pt-16 space-y-1">
-                <a href="/" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %} text-lg">🏠 Dashboard</a>
-                <a href="/servers" class="sidebar-link {% if active_page == 'servers' %}active{% endif %} text-lg">🖥 Servers</a>
-                <a href="/config" class="sidebar-link {% if active_page == 'config' %}active{% endif %} text-lg">⚙️ Config</a>
-                <a href="/logs" class="sidebar-link {% if active_page == 'logs' %}active{% endif %} text-lg">📋 Logs</a>
-                <a href="/install" class="sidebar-link {% if active_page == 'install' %}active{% endif %} text-lg">➕ Install</a>
+                <a href="/" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %} text-lg">🏠 {{ _("Dashboard") }}</a>
+                <a href="/servers" class="sidebar-link {% if active_page == 'servers' %}active{% endif %} text-lg">🖥 {{ _("Servers") }}</a>
+                <a href="/config" class="sidebar-link {% if active_page == 'config' %}active{% endif %} text-lg">⚙️ {{ _("Config") }}</a>
+                <a href="/logs" class="sidebar-link {% if active_page == 'logs' %}active{% endif %} text-lg">📋 {{ _("Logs") }}</a>
+                <a href="/install" class="sidebar-link {% if active_page == 'install' %}active{% endif %} text-lg">➕ {{ _("Install") }}</a>
             </div>
         </div>
 

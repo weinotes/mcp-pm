@@ -73,7 +73,7 @@ class McpSoBackend(RegistryBackend):
     """
 
     name = "mcpso"
-    base_url = "https://mcp.so/api"
+    base_url = "https://mcp.so"  # Note: API may be unavailable — falls back gracefully
 
     def __init__(self, client: httpx.AsyncClient | None = None) -> None:
         self._client = client
@@ -350,7 +350,7 @@ class SmitheryBackend(RegistryBackend):
     """
 
     name = "smithery"
-    base_url = "https://registry.smithery.ai/api"
+    base_url = "https://registry.smithery.ai"
 
     def __init__(self, client: httpx.AsyncClient | None = None) -> None:
         self._client = client

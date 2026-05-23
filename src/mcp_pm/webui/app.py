@@ -40,14 +40,33 @@ logger = logging.getLogger(__name__)
 # App setup
 # ---------------------------------------------------------------------------
 
+from mcp_pm.webui.lang import _, set_language, get_language, LANG_NAMES
+
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+templates.env.globals["_"] = _
+templates.env.globals["LANG_NAMES"] = LANG_NAMES
+templates.env.globals["get_language"] = get_language
 
 app = FastAPI(
     title="mcp-pm Dashboard",
     version="0.1.0",
     description="Web UI for managing MCP servers and tools",
 )
+
+
+# ---------------------------------------------------------------------------
+# Language middleware
+# ---------------------------------------------------------------------------
+
+
+@app.middleware("http")
+async def language_middleware(request: Request, call_next: Any) -> Any:
+    """Set language from query param or cookie."""
+    lang = request.query_params.get("lang") or request.cookies.get("lang") or "en"
+    set_language(lang)
+    response = await call_next(request)
+    return response
 
 # ---------------------------------------------------------------------------
 # Startup timestamp
