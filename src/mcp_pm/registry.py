@@ -494,6 +494,233 @@ class SmitheryBackend(RegistryBackend):
         return results
 
 
+class BuiltInBackend(RegistryBackend):
+    """Curated index of well-known MCP servers — always available, no network needed."""
+
+    name = "builtin"
+
+    # Curated list of popular MCP servers
+    _SERVERS: list[dict[str, Any]] = [
+        {"name": "filesystem", "desc": "Read, write, and manage files and directories", "type": "npm", "url": "@anthropic/mcp-server-filesystem", "author": "Anthropic", "tools": 12},
+        {"name": "github", "desc": "Manage GitHub repos, issues, PRs, and workflows", "type": "npm", "url": "@anthropic/mcp-server-github", "author": "Anthropic", "tools": 15},
+        {"name": "brave-search", "desc": "Web search using Brave Search API", "type": "npm", "url": "@anthropic/mcp-server-brave-search", "author": "Anthropic", "tools": 2},
+        {"name": "fetch", "desc": "Fetch and convert web content to markdown", "type": "npm", "url": "@anthropic/mcp-server-fetch", "author": "Anthropic", "tools": 1},
+        {"name": "puppeteer", "desc": "Browser automation with headless Chrome", "type": "npm", "url": "@anthropic/mcp-server-puppeteer", "author": "Anthropic", "tools": 8},
+        {"name": "sqlite", "desc": "SQLite database exploration and querying", "type": "npm", "url": "@anthropic/mcp-server-sqlite", "author": "Anthropic", "tools": 3},
+        {"name": "sentry", "desc": "Analyze Sentry issues and performance data", "type": "npm", "url": "mcp-server-sentry", "author": "Sentry", "tools": 6},
+        {"name": "slack", "desc": "Slack messaging and channel management", "type": "npm", "url": "mcp-server-slack", "author": "Anthropic", "tools": 10},
+        {"name": "postgres", "desc": "PostgreSQL database schema and query tool", "type": "npm", "url": "@anthropic/mcp-server-postgres", "author": "Anthropic", "tools": 5},
+        {"name": "redis", "desc": "Redis key-value store operations", "type": "npm", "url": "mcp-server-redis", "author": "Anthropic", "tools": 4},
+        {"name": "cloudflare", "desc": "Manage Cloudflare Workers, KV, R2, D1", "type": "npm", "url": "mcp-server-cloudflare", "author": "Cloudflare", "tools": 20},
+        {"name": "exa", "desc": "Fast AI-powered web search and crawling", "type": "npm", "url": "mcp-server-exa", "author": "Exa", "tools": 3},
+        {"name": "linear", "desc": "Linear issue tracking and project management", "type": "npm", "url": "mcp-server-linear", "author": "Linear", "tools": 8},
+        {"name": "notion", "desc": "Notion pages, databases, and search", "type": "npm", "url": "mcp-server-notion", "author": "Anthropic", "tools": 10},
+        {"name": "jira", "desc": "Jira issue management and project tracking", "type": "npm", "url": "mcp-server-jira", "author": "Anthropic", "tools": 8},
+        {"name": "confluence", "desc": "Confluence wiki and documentation access", "type": "npm", "url": "mcp-server-confluence", "author": "Anthropic", "tools": 6},
+        {"name": "gmail", "desc": "Read and send Gmail messages", "type": "pip", "url": "mcp-server-gmail", "author": "Smithery", "tools": 5},
+        {"name": "google-sheets", "desc": "Google Sheets read/write/format", "type": "pip", "url": "mcp-server-google-sheets", "author": "Smithery", "tools": 7},
+        {"name": "google-drive", "desc": "Google Drive file management", "type": "pip", "url": "mcp-server-google-drive", "author": "Smithery", "tools": 6},
+        {"name": "youtube", "desc": "YouTube transcript and metadata retrieval", "type": "pip", "url": "mcp-server-youtube", "author": "Community", "tools": 3},
+        {"name": "playwright", "desc": "Web scraping and browser automation", "type": "pip", "url": "mcp-server-playwright", "author": "Community", "tools": 8},
+        {"name": "spotify", "desc": "Spotify music control and playlist management", "type": "pip", "url": "mcp-server-spotify", "author": "Community", "tools": 6},
+        {"name": "discord", "desc": "Discord messaging and server management", "type": "pip", "url": "mcp-server-discord", "author": "Community", "tools": 5},
+        {"name": "docker", "desc": "Docker container management", "type": "pip", "url": "mcp-server-docker", "author": "Community", "tools": 10},
+        {"name": "kubernetes", "desc": "Kubernetes cluster management and operations", "type": "pip", "url": "mcp-server-kubernetes", "author": "Community", "tools": 12},
+        {"name": "weather", "desc": "Weather forecast and current conditions", "type": "pip", "url": "mcp-server-weather", "author": "Community", "tools": 2},
+        {"name": "mcp-pm", "desc": "Manage MCP servers with mcp-pm itself (meta!)", "type": "pip", "url": "mcp-pm", "author": "Davey Wong", "tools": 12},
+    ]
+
+    async def search(self, query: str, limit: int = 20) -> list[ServerManifest]:
+        """Search built-in index by name/description."""
+        q = query.lower()
+        results = []
+        for s in self._SERVERS:
+            if q in s["name"].lower() or q in s["desc"].lower() or q in s["author"].lower():
+                results.append(ServerManifest(
+                    name=s["name"],
+                    description=s["desc"],
+                    source_type=s["type"],
+                    source_url=s["url"],
+                    author=s["author"],
+                    tools_count=s["tools"],
+                ))
+                if len(results) >= limit:
+                    break
+        return results
+
+    async def get(self, name: str) -> ServerManifest | None:
+        """Get a server by name from the built-in index."""
+        for s in self._SERVERS:
+            if s["name"] == name:
+                return ServerManifest(
+                    name=s["name"],
+                    description=s["desc"],
+                    source_type=s["type"],
+                    source_url=s["url"],
+                    author=s["author"],
+                    tools_count=s["tools"],
+                )
+        return None
+
+    async def popular(self, limit: int = 20) -> list[ServerManifest]:
+        """Return all built-in servers as 'popular' list."""
+        results = []
+        for s in self._SERVERS[:limit]:
+            results.append(ServerManifest(
+                name=s["name"],
+                description=s["desc"],
+                source_type=s["type"],
+                source_url=s["url"],
+                author=s["author"],
+                tools_count=s["tools"],
+            ))
+        return results
+
+
+class NpmRegistryBackend(RegistryBackend):
+    """Search npm registry for MCP server packages."""
+
+    name = "npm"
+    base_url = "https://registry.npmjs.org"
+
+    def __init__(self, client: httpx.AsyncClient | None = None) -> None:
+        self._client = client
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(
+                headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+                timeout=httpx.Timeout(10.0),
+            )
+        return self._client
+
+    async def search(self, query: str, limit: int = 20) -> list[ServerManifest]:
+        """Search npm for MCP-related packages."""
+        client = await self._get_client()
+        results: list[ServerManifest] = []
+        try:
+            # Search npm for MCP packages matching the query
+            resp = await client.get(
+                f"{self.base_url}/-/v1/search",
+                params={"text": f"mcp-server {query}", "size": min(limit, 50)},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            for obj in data.get("objects", [])[:limit]:
+                pkg = obj.get("package", {})
+                name = pkg.get("name", "")
+                if not name or "mcp" not in name.lower():
+                    continue
+                results.append(ServerManifest(
+                    name=name,
+                    description=pkg.get("description", ""),
+                    source_type="npm",
+                    source_url=name,
+                    author=pkg.get("publisher", {}).get("username", "npm"),
+                    homepage=pkg.get("links", {}).get("npm", ""),
+                    stars=obj.get("score", {}).get("detail", {}).get("quality", 0),
+                ))
+        except Exception as exc:
+            logger.debug("npm search failed: %s", exc)
+        return results
+
+    async def get(self, name: str) -> ServerManifest | None:
+        """Get a single package from npm."""
+        client = await self._get_client()
+        try:
+            resp = await client.get(f"{self.base_url}/{name.replace('/', '%2F')}")
+            resp.raise_for_status()
+            data = resp.json()
+            return ServerManifest(
+                name=data.get("name", name),
+                description=data.get("description", ""),
+                source_type="npm",
+                source_url=data.get("name", name),
+                author=data.get("author", {}).get("name", "npm") if isinstance(data.get("author"), dict) else str(data.get("author", "npm")),
+                homepage=data.get("homepage", ""),
+                license=data.get("license", ""),
+            )
+        except Exception as exc:
+            logger.debug("npm get '%s' failed: %s", name, exc)
+            return None
+
+    async def popular(self, limit: int = 20) -> list[ServerManifest]:
+        """Get popular MCP packages from npm."""
+        return await self.search("", limit)
+
+
+class PyPIRegistryBackend(RegistryBackend):
+    """Search PyPI for MCP server packages."""
+
+    name = "pypi"
+    base_url = "https://pypi.org"
+
+    def __init__(self, client: httpx.AsyncClient | None = None) -> None:
+        self._client = client
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(
+                headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+                timeout=httpx.Timeout(10.0),
+            )
+        return self._client
+
+    async def search(self, query: str, limit: int = 20) -> list[ServerManifest]:
+        """Search PyPI for MCP-related packages."""
+        client = await self._get_client()
+        results: list[ServerManifest] = []
+        try:
+            resp = await client.get(
+                f"{self.base_url}/search/",
+                params={"q": f"mcp {query}", "page": 1},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            # PyPI search returns results in data.results
+            for item in data.get("results", [])[:limit]:
+                name = item.get("name", "")
+                if not name or "mcp" not in name.lower():
+                    continue
+                results.append(ServerManifest(
+                    name=name,
+                    description=item.get("summary", ""),
+                    source_type="pip",
+                    source_url=name,
+                    author=item.get("author", "PyPI"),
+                    homepage=item.get("home_page", ""),
+                    license=item.get("license", ""),
+                ))
+        except Exception as exc:
+            logger.debug("PyPI search failed: %s", exc)
+        return results
+
+    async def get(self, name: str) -> ServerManifest | None:
+        """Get a single package from PyPI."""
+        client = await self._get_client()
+        try:
+            resp = await client.get(f"{self.base_url}/pypi/{name}/json")
+            resp.raise_for_status()
+            data = resp.json()
+            info = data.get("info", {})
+            return ServerManifest(
+                name=info.get("name", name),
+                description=info.get("summary", ""),
+                source_type="pip",
+                source_url=info.get("name", name),
+                author=info.get("author", "PyPI"),
+                homepage=info.get("home_page", ""),
+                license=info.get("license", ""),
+            )
+        except Exception as exc:
+            logger.debug("PyPI get '%s' failed: %s", name, exc)
+            return None
+
+    async def popular(self, limit: int = 20) -> list[ServerManifest]:
+        """Get popular MCP packages from PyPI."""
+        return await self.search("mcp-server", limit)
+
+
 class CompositeRegistry:
     """Aggregates multiple registry backends."""
 
@@ -560,9 +787,12 @@ class RegistryManager:
             self.backends = backends
         else:
             self.backends = [
+                BuiltInBackend(),
                 McpSoBackend(client=client),
                 GitHubRegistryBackend(client=client),
                 SmitheryBackend(client=client),
+                NpmRegistryBackend(client=client),
+                PyPIRegistryBackend(client=client),
             ]
         self._composite = CompositeRegistry(self.backends)
 
