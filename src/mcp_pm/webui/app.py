@@ -29,14 +29,13 @@ from mcp_pm.client import MCPSession
 from mcp_pm.config import Config
 from mcp_pm.installer import Installer
 from mcp_pm.registry import RegistryManager, ServerManifest
+from mcp_pm.webui.lang import LANG_NAMES, _, get_language, set_language
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # App setup
 # ---------------------------------------------------------------------------
-
-from mcp_pm.webui.lang import _, set_language, get_language, LANG_NAMES
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))

@@ -11,16 +11,12 @@ sys.path.insert(0, "src")
 
 from mcp_pm.client import (
     HTTPMCPClient,
-    MCPClient,
-    MCPServer,
     MCPSession,
     MCPTool,
     MCPToolResult,
-    ProtocolError,
     StdioMCPClient,
-    TransportType,
 )
-from mcp_pm.server import _handle_tool_calls, create_app, mcp_tool_to_openai, start
+from mcp_pm.server import create_app, mcp_tool_to_openai
 
 # Basic sanity checks
 assert StdioMCPClient is not None

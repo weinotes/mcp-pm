@@ -10,7 +10,7 @@ Licensed under MIT License.
 """
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -80,7 +80,7 @@ async def test_off_start_stop(sandbox_off: SandboxManager) -> None:
     # Stop
     with (
         patch("os.kill") as mock_kill,
-        patch("os.waitpid") as mock_wait,
+        patch("os.waitpid"),
     ):
         await sandbox_off.stop(pid)
         mock_kill.assert_called_once_with(pid, 15)  # SIGTERM
@@ -121,7 +121,7 @@ async def test_subprocess_start_stop(sandbox_subprocess: SandboxManager) -> None
         patch("asyncio.create_subprocess_exec", new=AsyncMock(return_value=mock_proc)),
         patch("os.getpgid", return_value=555),
         patch("os.killpg") as mock_killpg,
-        patch("os.kill") as mock_kill,
+        patch("os.kill"),
         patch("asyncio.wait_for", side_effect=asyncio.TimeoutError),
         patch("asyncio.sleep", new=AsyncMock()),
     ):
@@ -144,9 +144,9 @@ async def test_subprocess_start_command_not_found(sandbox_subprocess: SandboxMan
     """SUBPROCESS level: non-existent command raises SandboxError."""
     with (
         patch("asyncio.create_subprocess_exec", side_effect=FileNotFoundError),
+        pytest.raises(SandboxError, match="Command not found"),
     ):
-        with pytest.raises(SandboxError, match="Command not found"):
-            await sandbox_subprocess.start("bad-cmd", ["nonexistent_cmd_xyz"])
+        await sandbox_subprocess.start("bad-cmd", ["nonexistent_cmd_xyz"])
 
 
 @pytest.mark.asyncio

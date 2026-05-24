@@ -21,7 +21,7 @@ import logging
 import os
 import subprocess
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import httpx
@@ -32,7 +32,7 @@ MCP_PROTOCOL_VERSION = "2024-11-05"
 DEFAULT_TIMEOUT = 30.0
 
 
-class TransportType(str, Enum):
+class TransportType(StrEnum):
     STDIO = "stdio"
     HTTP = "http"
     SSE = "sse"
@@ -175,10 +175,8 @@ class StdioMCPClient(MCPClient):
         if self._process.stdin is None or self._process.stdout is None:
             raise ConnectionError("Subprocess stdin/stdout not available")
 
-        self._reader = asyncio.StreamReader()
-        protocol = asyncio.StreamReaderProtocol(self._reader)
-        loop = asyncio.get_event_loop()
-        await loop.connect_read_pipe(lambda: protocol, self._process.stdout)
+        # Use the process streams directly
+        self._reader = self._process.stdout
 
         # Start background reader
         self._reader_task = asyncio.create_task(self._background_read())
@@ -217,17 +215,13 @@ class StdioMCPClient(MCPClient):
         # Cancel background reader
         if self._reader_task is not None:
             self._reader_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._reader_task
-            except asyncio.CancelledError:
-                pass
             self._reader_task = None
 
         # Send exit notification
-        try:
+        with contextlib.suppress(Exception):
             await self._send_notification("exit")
-        except Exception:
-            pass
 
         # Terminate the process
         if self._process is not None and self._process.returncode is None:
@@ -235,7 +229,7 @@ class StdioMCPClient(MCPClient):
                 self._process.terminate()
                 try:
                     await asyncio.wait_for(self._process.wait(), timeout=5.0)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     self._process.kill()
                     await self._process.wait()
             except ProcessLookupError:
@@ -306,14 +300,14 @@ class StdioMCPClient(MCPClient):
         logger.debug("Sending request: %s", raw.strip())
 
         try:
-            if self._write_transport is None:
+            if self._process is None or self._process.stdin is None:
                 raise ConnectionError("Write transport not available")
-            self._write_transport.write(raw.encode("utf-8"))
-            await self._write_transport.drain()
+            self._process.stdin.write(raw.encode("utf-8"))
+            await self._process.stdin.drain()
 
             try:
                 response = await asyncio.wait_for(future, timeout=DEFAULT_TIMEOUT)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 del self._pending[request_id]
                 raise TimeoutError(f"Request timed out after {DEFAULT_TIMEOUT}s: {method}") from None
 
@@ -341,10 +335,10 @@ class StdioMCPClient(MCPClient):
         raw = json.dumps(notification) + "\n"
         logger.debug("Sending notification: %s", raw.strip())
 
-        if self._write_transport is None:
+        if self._process is None or self._process.stdin is None:
             raise ConnectionError("Write transport not available")
-        self._write_transport.write(raw.encode("utf-8"))
-        await self._write_transport.drain()
+        self._process.stdin.write(raw.encode("utf-8"))
+        await self._process.stdin.drain()
 
     async def _background_read(self) -> None:
         """Continuously read lines from stdout and dispatch responses."""
@@ -357,7 +351,7 @@ class StdioMCPClient(MCPClient):
                     raw_line = await asyncio.wait_for(
                         self._reader.readline(), timeout=0.5
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue
 
                 if not raw_line:

@@ -21,12 +21,13 @@ import asyncio
 import json
 import logging
 import uuid
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 
-from mcp_pm.client import MCPTool, MCPSession, MCPToolResult
+from mcp_pm.client import MCPSession, MCPTool, MCPToolResult
 
 logger = logging.getLogger(__name__)
 
@@ -308,7 +309,7 @@ def create_app(session: MCPSession) -> FastAPI:
         response_id = f"chatcmpl-{uuid.uuid4().hex[:12]}"
         created = int(asyncio.get_event_loop().time())
 
-        response = _build_non_streaming_response(
+        response = await _build_non_streaming_response(
             user_content=user_content,
             available_tools=available_tools,
             messages=messages,
@@ -328,7 +329,7 @@ def create_app(session: MCPSession) -> FastAPI:
 # ---------------------------------------------------------------------------
 
 
-def _build_non_streaming_response(
+async def _build_non_streaming_response(
     user_content: str,
     available_tools: list[dict[str, Any]],
     messages: list[dict[str, Any]],
@@ -347,36 +348,32 @@ def _build_non_streaming_response(
     last_msg = messages[-1] if messages else {}
     if last_msg.get("role") == "assistant" and "tool_calls" in last_msg:
         # Process tool calls
-        async def _process() -> dict[str, Any]:
-            tool_results = await _handle_tool_calls(session, last_msg["tool_calls"])
-            response_message: dict[str, Any] = {
-                "role": "assistant",
-                "content": None,
+        tool_results = await _handle_tool_calls(session, last_msg["tool_calls"])
+        response_message: dict[str, Any] = {
+            "role": "assistant",
+            "content": None,
+        }
+        choices = [
+            {
+                "index": 0,
+                "message": response_message,
+                "finish_reason": "stop",
+                "logprobs": None,
             }
-            choices = [
-                {
-                    "index": 0,
-                    "message": response_message,
-                    "finish_reason": "stop",
-                    "logprobs": None,
-                }
-            ]
-            return {
-                "id": response_id,
-                "object": "chat.completion",
-                "created": created,
-                "model": model,
-                "choices": choices,
-                "usage": {
-                    "prompt_tokens": 0,
-                    "completion_tokens": 0,
-                    "total_tokens": 0,
-                },
-                "tool_results": tool_results,
-            }
-
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(_process())
+        ]
+        return {
+            "id": response_id,
+            "object": "chat.completion",
+            "created": created,
+            "model": model,
+            "choices": choices,
+            "usage": {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+            },
+            "tool_results": tool_results,
+        }
 
     # Normal response — present available tools
     if available_tools and tool_choice != "none":

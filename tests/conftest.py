@@ -7,8 +7,9 @@ Licensed under MIT License.
 """
 
 import json
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

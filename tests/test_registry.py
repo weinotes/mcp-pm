@@ -30,14 +30,14 @@ class MockRegistryBackend:
 @pytest.mark.asyncio
 async def test_composite_registry_search() -> None:
     """Composite registry aggregates results from backends."""
-    s1 = ServerManifest(name="server-a", description="First", source_type="git", source_url="https://a")
-    s2 = ServerManifest(name="server-b", description="Second", source_type="pip", source_url="https://b")
+    s1 = ServerManifest(name="test-server", description="A test MCP server", source_type="git", source_url="https://a")
+    s2 = ServerManifest(name="another-test", description="Another test server", source_type="pip", source_url="https://b")
     backend = MockRegistryBackend([s1, s2])
     registry = CompositeRegistry([backend])
 
     results = await registry.search("test")
     assert len(results) == 2
-    assert results[0].name == "server-a"
+    assert results[0].name == "test-server"
 
 
 @pytest.mark.asyncio

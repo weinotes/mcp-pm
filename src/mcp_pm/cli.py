@@ -473,8 +473,17 @@ def search(query: str, limit: int, registry: str | None, popular: bool) -> None:
             console.print(f"[yellow]{escape(msg)}[/yellow]")
             return
 
-        # Sort by stars descending
-        results.sort(key=lambda m: m.stars, reverse=True)
+        # Sort by relevance (name match > description/author > stars tiebreaker)
+        def _relevance_key(m: ServerManifest) -> tuple:
+            q_lower = query.lower() if query else ""
+            if not q_lower:
+                return (0, -m.stars)
+            name_match = 2 if q_lower in m.name.lower() else 0
+            desc_match = 1 if q_lower in m.description.lower() else 0
+            author_match = 1 if m.author and q_lower in m.author.lower() else 0
+            return (-(name_match + desc_match + author_match), -m.stars)
+
+        results.sort(key=_relevance_key)
 
         table = Table(
             title=f"{'Popular' if popular else f'Search: {query}'} MCP Servers",
@@ -1025,6 +1034,318 @@ def update(yes: bool) -> None:
         raise SystemExit(0) from None
     except Exception as exc:
         _print_error(f"Update failed: {exc}")
+        raise SystemExit(1) from exc
+
+
+# ---------------------------------------------------------------------------
+# 13. outdated
+# ---------------------------------------------------------------------------
+
+
+@cli.command()
+@click.option("--json", "json_out", is_flag=True, help="Output as JSON")
+def outdated(json_out: bool) -> None:
+    """Show outdated MCP servers with available updates."""
+    from mcp_pm.formula import FormulaManager
+
+    try:
+        fm = FormulaManager()
+        formulae = fm.list_formulae()
+
+        if not formulae:
+            console.print("[yellow]No servers installed.[/yellow]")
+            return
+
+        outdated_list: list[dict[str, str]] = []
+        with _create_progress("Checking for updates...") as progress:
+            task = progress.add_task("Querying versions...", total=len(formulae))
+            for f in formulae:
+                progress.update(task, description=f"Checking {f.name}...")
+                latest = _async_run(fm.check_latest(f))
+                status = fm.compare_versions(f.version, latest)
+                if status in ("outdated", None):
+                    outdated_list.append({
+                        "name": f.name,
+                        "current": f.version,
+                        "latest": latest or "unknown",
+                        "status": status or "unknown",
+                    })
+                progress.advance(task)
+            progress.update(task, completed=True)
+
+        if json_out:
+            console.print_json(data=outdated_list)
+            return
+
+        if not outdated_list:
+            console.print("[green]All servers are up to date![/green]")
+            return
+
+        table = Table(
+            title="Outdated MCP Servers",
+            box=ROUNDED,
+            header_style="bold yellow",
+        )
+        table.add_column("Name", style="bold")
+        table.add_column("Current", style="cyan")
+        table.add_column("Latest", style="green")
+        table.add_column("Status", style="yellow")
+
+        for item in outdated_list:
+            status_icon = "[red]OUTDATED[/red]" if item["status"] == "outdated" else "[dim]unknown[/dim]"
+            table.add_row(
+                escape(item["name"]),
+                item["current"],
+                item["latest"],
+                status_icon,
+            )
+
+        console.print(table)
+        console.print(f"\n[dim]{len(outdated_list)} server(s) outdated[/dim]")
+
+    except Exception as exc:
+        _print_error(f"Outdated check failed: {exc}")
+        raise SystemExit(1) from exc
+
+
+# ---------------------------------------------------------------------------
+# 14. cleanup
+# ---------------------------------------------------------------------------
+
+
+@cli.command()
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
+def cleanup(yes: bool) -> None:
+    """Remove stale cache and orphaned server directories."""
+    try:
+        servers_dir = Path.home() / ".mcp-pm" / "servers"
+        cache_dirs: list[Path] = []
+        orphaned_dirs: list[Path] = []
+
+        # Find orphaned dirs (no formula.yaml and no manifest.yaml)
+        if servers_dir.exists():
+            for entry in sorted(servers_dir.iterdir()):
+                if not entry.is_dir():
+                    continue
+                formula_file = entry / "formula.yaml"
+                manifest_file = entry / "manifest.yaml"
+                if not formula_file.exists() and not manifest_file.exists():
+                    orphaned_dirs.append(entry)
+
+        # Find pip/npm cache related to uninstalled servers
+        # (orphaned_* already captures this)
+
+        if not orphaned_dirs and not cache_dirs:
+            console.print("[green]Nothing to clean up![/green]")
+            return
+
+        # Report
+        total_size = 0
+        for d in orphaned_dirs:
+            for f in d.rglob("*"):
+                if f.is_file():
+                    total_size += f.stat().st_size
+
+        table = Table(
+            title="Cleanup Summary",
+            box=ROUNDED,
+            header_style="bold cyan",
+        )
+        table.add_column("Type", style="yellow")
+        table.add_column("Count", justify="right")
+        table.add_column("Size")
+        table.add_row("Orphaned directories", str(len(orphaned_dirs)),
+                       f"{total_size / 1024:.1f} KB" if total_size > 0 else "-")
+
+        console.print(table)
+
+        if not yes:
+            click.confirm("Remove these items?", default=False, abort=True)
+
+        # Perform cleanup
+        removed = 0
+        for d in orphaned_dirs:
+            import shutil
+            shutil.rmtree(d, ignore_errors=True)
+            removed += 1
+            logger.info("Removed orphaned directory: %s", d)
+
+        console.print(f"[green]✓ Cleaned up {removed} orphaned item(s).[/green]")
+
+    except click.Abort:
+        console.print("[yellow]Cleanup cancelled.[/yellow]")
+        raise SystemExit(0) from None
+    except Exception as exc:
+        _print_error(f"Cleanup failed: {exc}")
+        raise SystemExit(1) from exc
+
+
+# ---------------------------------------------------------------------------
+# 15. tap
+# ---------------------------------------------------------------------------
+
+
+@cli.group()
+def tap() -> None:
+    """Manage third-party tap repositories."""
+    pass
+
+
+@tap.command("add")
+@click.argument("name")
+@click.option("--url", help="Git URL (default: https://github.com/{name}.git)")
+def tap_add(name: str, url: str | None) -> None:
+    """Add a third-party tap from GitHub.
+
+    NAME should be in ``owner/repo`` format, e.g. ``weinotes/mcp-tap``.
+    """
+    from mcp_pm.tap import TapManager
+
+    try:
+        tm = TapManager()
+        result = _async_run(tm.add(name, repo_url=url))
+        _print_success(f"Tap '{result.name}' added from {result.repo_url}")
+        console.print(f"  Location: {result.path}")
+    except ValueError as exc:
+        _print_error(str(exc))
+        raise SystemExit(1) from exc
+    except Exception as exc:
+        _print_error(f"Failed to add tap: {exc}")
+        raise SystemExit(1) from exc
+
+
+@tap.command("list")
+def tap_list() -> None:
+    """List installed taps."""
+    from mcp_pm.tap import TapManager
+
+    try:
+        tm = TapManager()
+        taps = tm.list_taps()
+        if not taps:
+            console.print("[yellow]No taps installed.[/yellow]")
+            return
+
+        table = Table(
+            title="Installed Taps",
+            box=ROUNDED,
+            header_style="bold cyan",
+        )
+        table.add_column("Name", style="bold")
+        table.add_column("Repository", style="dim")
+        table.add_column("Path", style="green")
+        for t in taps:
+            table.add_row(t.name, t.repo_url, str(t.path))
+        console.print(table)
+    except Exception as exc:
+        _print_error(f"Failed to list taps: {exc}")
+        raise SystemExit(1) from exc
+
+
+@tap.command("remove")
+@click.argument("name")
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
+def tap_remove(name: str, yes: bool) -> None:
+    """Remove an installed tap."""
+    from mcp_pm.tap import TapManager
+
+    try:
+        tm = TapManager()
+        tap_obj = tm.get_tap(name)
+        if tap_obj is None:
+            _print_error(f"Tap '{name}' is not installed.")
+            raise SystemExit(1)
+
+        if not yes:
+            click.confirm(f"Remove tap '{tap_obj.name}'?", default=False, abort=True)
+
+        if tm.remove(name):
+            _print_success(f"Tap '{name}' removed.")
+        else:
+            _print_error(f"Failed to remove tap '{name}'.")
+            raise SystemExit(1)
+    except click.Abort:
+        console.print("[yellow]Cancelled.[/yellow]")
+        raise SystemExit(0) from None
+    except Exception as exc:
+        _print_error(f"Failed to remove tap: {exc}")
+        raise SystemExit(1) from exc
+
+
+# ---------------------------------------------------------------------------
+# 16. audit
+# ---------------------------------------------------------------------------
+
+
+@cli.command()
+@click.argument("name", required=False)
+@click.option("--json", "json_out", is_flag=True, help="Output as JSON")
+@click.option("--fix", is_flag=True, help="Auto-fix minor issues")
+def audit(name: str | None, json_out: bool, fix: bool) -> None:
+    """Check formula quality for installed MCP servers.
+
+    Audits all servers, or a specific server by NAME.
+    """
+    from mcp_pm.audit import audit_all, audit_server
+
+    try:
+        results = [audit_server(name)] if name else audit_all()
+
+        if not results:
+            console.print("[yellow]No servers to audit.[/yellow]")
+            return
+
+        if json_out:
+            output = []
+            for r in results:
+                output.append({
+                    "name": r.name,
+                    "passed": r.passed,
+                    "issues": [
+                        {"severity": i.severity, "check": i.check, "message": i.message}
+                        for i in r.issues
+                    ],
+                })
+            console.print_json(data=output)
+            return
+
+        total_errors = 0
+        total_warnings = 0
+        for r in results:
+            if r.passed and not r.issues:
+                continue
+            total_errors += r.error_count
+            total_warnings += r.warning_count
+
+            header_style = "red" if r.error_count > 0 else "yellow"
+            parts = []
+            if r.error_count:
+                parts.append(f"[red]{r.error_count} error(s)[/red]")
+            if r.warning_count:
+                parts.append(f"[yellow]{r.warning_count} warning(s)[/yellow]")
+            summary = " ".join(parts)
+            console.print(Panel(
+                f"[bold]{escape(r.name)}[/bold] {summary}",
+                border_style=header_style,
+            ))
+            for issue in r.issues:
+                icon = "[red]✗[/red]" if issue.severity == "error" else \
+                       "[yellow]⚠[/yellow]" if issue.severity == "warning" else \
+                       "[dim]ℹ[/dim]"
+                console.print(f"  {icon} [{issue.severity}] {escape(issue.message)}")
+
+        # Summary
+        if not any(r.issues for r in results):
+            total = len(results)
+            console.print(f"\n[green]All {total} server(s) passed audit![/green]")
+        else:
+            console.print(
+                f"\n[dim]{total_errors} error(s), {total_warnings} warning(s) "
+                f"across {len(results)} server(s)[/dim]"
+            )
+
+    except Exception as exc:
+        _print_error(f"Audit failed: {exc}")
         raise SystemExit(1) from exc
 
 

@@ -19,12 +19,12 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import enum
 import os
 import resource
 import signal
 import time
 from dataclasses import dataclass, field
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -36,12 +36,9 @@ SANDBOX_ROOT: Path = Path.home() / ".mcp-pm" / "sandbox"
 # Environment variables allowed through in subprocess mode
 _ALLOWED_ENV_KEYS = frozenset({"PATH", "HOME"})
 
-# Default timeout for health-check pings (seconds)
-_HEALTH_PING_TIMEOUT = 5.0
-
 
 # ── Level enumeration ───────────────────────────────────────────────────
-class SandboxLevel(str, enum.Enum):
+class SandboxLevel(StrEnum):
     OFF = "off"
     SUBPROCESS = "subprocess"
     DOCKER = "docker"
@@ -259,9 +256,7 @@ class SandboxManager:
 
     def _health_off(self, entry: _SandboxEntry) -> bool:
         proc = entry.popen
-        if proc is None or proc.returncode is not None:
-            return False
-        return True
+        return not (proc is None or proc.returncode is not None)
 
     # ═══════════════════════════════════════════════════════════════════
     # Internal: SUBPROCESS level
@@ -329,15 +324,11 @@ class SandboxManager:
 
         try:
             await asyncio.wait_for(process.wait(), timeout=timeout_seconds)
-        except asyncio.TimeoutError:
-            try:
+        except TimeoutError:
+            with contextlib.suppress(ProcessLookupError, PermissionError):
                 os.killpg(os.getpgid(pid), signal.SIGKILL)
-            except (ProcessLookupError, PermissionError):
-                pass
-            try:
+            with contextlib.suppress(Exception):
                 await process.wait()
-            except Exception:
-                pass
 
     async def _health_subprocess(self, entry: _SandboxEntry) -> bool:
         process = entry.process
@@ -346,15 +337,17 @@ class SandboxManager:
         if process.returncode is not None:
             return False
 
-        # Ping-style timeout check: the process must be responsive
+        # Check if the process is alive via kill(0) — sends no signal, just checks existence
         try:
-            await asyncio.wait_for(
-                asyncio.sleep(0), timeout=_HEALTH_PING_TIMEOUT
-            )
-        except asyncio.TimeoutError:
+            os.kill(entry.pid, 0)
+            return True
+        except ProcessLookupError:
             return False
-
-        return True
+        except PermissionError:
+            # Process exists but we don't have permission to signal it — still alive
+            return True
+        except OSError:
+            return False
 
     # ═══════════════════════════════════════════════════════════════════
     # Internal: DOCKER level
@@ -446,10 +439,8 @@ def _prepare_subprocess() -> None:
     - Create a new process group (setsid)
     - Set resource limits (RLIMIT_AS for virtual memory)
     """
-    try:
+    with contextlib.suppress(PermissionError):
         os.setsid()
-    except PermissionError:
-        pass
 
     try:
         # Limit virtual memory to 1 GB
@@ -459,5 +450,5 @@ def _prepare_subprocess() -> None:
             resource.RLIMIT_AS,
             (min(soft, limit) if soft > 0 else limit, hard),
         )
-    except (ValueError, resource.error):
+    except (OSError, ValueError):
         pass

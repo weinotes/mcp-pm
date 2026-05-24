@@ -21,8 +21,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import shutil
-from datetime import datetime, timezone
-from enum import Enum
+import sys
+from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -33,7 +34,7 @@ from .registry import ServerManifest
 logger = logging.getLogger(__name__)
 
 
-class SourceType(str, Enum):
+class SourceType(StrEnum):
     GIT = "git"
     NPM = "npm"
     PIP = "pip"
@@ -46,7 +47,7 @@ class InstallError(Exception):
 
 def _now_iso() -> str:
     """Return current UTC time as ISO 8601 string."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 async def _run_cmd(
@@ -71,7 +72,7 @@ async def _run_cmd(
         stdout = stdout_bytes.decode("utf-8", errors="replace") if stdout_bytes else ""
         stderr = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
         return (proc.returncode or 0, stdout, stderr)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return (-1, "", f"Command timed out after {timeout}s: {' '.join(cmd)}")
     except FileNotFoundError:
         return (-2, "", f"Command not found: {cmd[0]}")
@@ -85,6 +86,18 @@ def _write_manifest(manifest_dir: Path, data: dict[str, Any]) -> None:
     manifest_path = manifest_dir / "manifest.yaml"
     manifest_path.write_text(
         yaml.dump(data, default_flow_style=False, sort_keys=False),
+        encoding="utf-8",
+    )
+
+
+def _write_formula(manifest_dir: Path, data: dict[str, Any]) -> None:
+    """Write formula.yaml alongside manifest.yaml for Homebrew-compatible metadata."""
+    from mcp_pm.formula import Formula
+
+    formula = Formula.from_dict(data)
+    formula_path = manifest_dir / "formula.yaml"
+    formula_path.write_text(
+        yaml.dump(formula.to_dict(), default_flow_style=False, sort_keys=False),
         encoding="utf-8",
     )
 
@@ -189,6 +202,7 @@ class Installer:
             "homepage": manifest.homepage or manifest.source_url,
         }
         _write_manifest(target_dir, manifest_data)
+        _write_formula(target_dir, manifest_data)
         return target_dir
 
     async def install_pip(self, manifest: ServerManifest) -> Path:
@@ -209,31 +223,36 @@ class Installer:
         if not package:
             raise InstallError("No package specifier found for pip installation")
 
+        # Normalize package name: strip version specifiers
+        pkg_name = package.split("==")[0].split(">=")[0].split("<")[0].strip()
+
         logger.info("Installing pip package: %s", package)
 
-        # Prefer uv if available, fallback to pip
-        uv_available = False
-        returncode, _, _ = await _run_cmd(["uv", "--version"])
-        uv_available = returncode == 0
-
-        if uv_available:
-            cmd = ["uv", "pip", "install", "--system", package]
-        else:
-            cmd = ["pip3", "install", package]
+        cmd = [sys.executable, "-m", "pip", "install", package]
 
         returncode, stdout, stderr = await _run_cmd(cmd)
         if returncode != 0:
             raise InstallError(f"pip install failed (rc={returncode}): {stderr[:500]}")
 
         # Extract version from pip output
+        # pip output format examples:
+        #   Successfully installed mcp-server-weather-0.1.4
+        #   Requirement already satisfied: mcp-server-weather in ... (0.1.4)
         version = "unknown"
         for line in stdout.splitlines():
             line = line.strip()
-            if package.split("==")[0].split(">=")[0].split("<")[0].strip() in line and "-" in line:
-                parts = line.split()
-                if len(parts) >= 2:
-                    version = parts[-1]
-                    break
+            # Look for "Successfully installed <package>-<version>"
+            if "Successfully installed" in line:
+                for word in line.split():
+                    if pkg_name in word:
+                        ver_part = word.split(pkg_name, 1)[-1]
+                        if ver_part.startswith("-"):
+                            ver_part = ver_part[1:]
+                        if ver_part:
+                            version = ver_part
+                            break
+            if version != "unknown":
+                break
 
         manifest_data: dict[str, Any] = {
             "name": manifest.name,
@@ -247,6 +266,7 @@ class Installer:
             "homepage": manifest.homepage,
         }
         _write_manifest(target_dir, manifest_data)
+        _write_formula(target_dir, manifest_data)
         return target_dir
 
     async def uninstall(self, name: str) -> bool:
@@ -264,7 +284,10 @@ class Installer:
         if manifest and manifest.get("source_type") == "pip":
             package = manifest.get("package", name)
             logger.info("Uninstalling pip package: %s", package)
-            returncode, _, stderr = await _run_cmd(["pip3", "uninstall", "-y", package])
+            uninstall_cmd = [
+                sys.executable, "-m", "pip", "uninstall", "-y", package,
+            ]
+            returncode, _, stderr = await _run_cmd(uninstall_cmd)
             if returncode != 0:
                 logger.warning("pip uninstall had issues: %s", stderr[:200])
 
@@ -359,7 +382,7 @@ class Installer:
         if (target_dir / "requirements.txt").exists():
             logger.info("Found requirements.txt, running pip install ...")
             rc, _, stderr = await _run_cmd(
-                ["pip3", "install", "-r", "requirements.txt"], cwd=target_dir
+                [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], cwd=target_dir
             )
             if rc != 0:
                 logger.warning("pip install -r had issues: %s", stderr[:200])
@@ -391,22 +414,32 @@ class Installer:
     async def _update_pip(self, name: str, target_dir: Path, manifest: dict[str, Any]) -> bool:
         """Update a pip-based installation."""
         package = manifest.get("package", name)
+        # Normalize package name: strip version specifiers
+        pkg_name = package.split("==")[0].split(">=")[0].split("<")[0].strip()
         logger.info("Upgrading pip package: %s", package)
 
         returncode, stdout, stderr = await _run_cmd(
-            ["pip3", "install", "--upgrade", package],
+            [sys.executable, "-m", "pip", "install", "--upgrade", package],
         )
         if returncode != 0:
             raise InstallError(f"pip upgrade failed (rc={returncode}): {stderr[:500]}")
 
-        # Extract new version
+        # Extract new version from pip upgrade output
         version = "unknown"
         for line in stdout.splitlines():
-            if "installed" in line.lower() and package.split("==")[0] in line:
-                parts = line.split()
-                if len(parts) >= 2:
-                    version = parts[-1]
-                    break
+            line_stripped = line.strip()
+            # Look for "Successfully installed <package>-<version>"
+            if "Successfully installed" in line_stripped:
+                for word in line_stripped.split():
+                    if pkg_name in word:
+                        ver_part = word.split(pkg_name, 1)[-1]
+                        if ver_part.startswith("-"):
+                            ver_part = ver_part[1:]
+                        if ver_part:
+                            version = ver_part
+                            break
+            if version != "unknown":
+                break
 
         manifest["version"] = version
         manifest["updated_at"] = _now_iso()
