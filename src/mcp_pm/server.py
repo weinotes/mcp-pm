@@ -195,7 +195,7 @@ def create_app(session: MCPSession) -> FastAPI:
     """
     app = FastAPI(
         title="mcp-pm Proxy Server",
-        version="0.1.1",
+        version="0.2.0",
         description="OpenAI-compatible API proxy for MCP tools",
     )
 

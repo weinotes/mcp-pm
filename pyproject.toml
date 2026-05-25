@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-pm"
-version = "0.1.1"
+version = "0.2.0"
 description = "Homebrew for MCP Servers — A CLI package manager for MCP servers"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -80,6 +80,11 @@ line-length = 100
 "src/mcp_pm/webui/app.py" = ["E501"]
 "src/mcp_pm/client.py" = ["E501"]
 "src/mcp_pm/server.py" = ["E501"]
+"src/mcp_pm/cmd/_doctor.py" = ["E501"]
+"src/mcp_pm/cmd/_outdated.py" = ["E501"]
+"src/mcp_pm/cmd/_serve.py" = ["E501"]
+"src/mcp_pm/cmd/_update.py" = ["E501"]
+"src/mcp_pm/cmd/_create.py" = ["E501"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]

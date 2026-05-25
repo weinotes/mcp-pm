@@ -2,16 +2,16 @@
 # Author: Davey Wong <wgwcko@gmail.com> (https://www.guangweiblog.com)
 # Licensed under MIT License.
 
-"""mcp-pm CLI — Homebrew for MCP Servers.
+"""Command package for mcp-pm CLI.
 
-The ``cli`` Click group is defined in :mod:`mcp_pm.cmd._helpers`.
-Commands are registered in the :mod:`mcp_pm.cmd` package and auto-imported here.
+Each module registers its command(s) on the shared ``cli`` Click group
+imported from :mod:`mcp_pm.cli`.
 """
 
 from __future__ import annotations
 
 # Import all command modules so they register on the cli group
-from mcp_pm.cmd import (  # noqa: F401, E402
+from mcp_pm.cmd import (  # noqa: F401
     _audit,
     _autoremove,
     _bump,
@@ -40,11 +40,3 @@ from mcp_pm.cmd import (  # noqa: F401, E402
     _uninstall,
     _update,
 )
-from mcp_pm.cmd._helpers import cli  # noqa: F401
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    cli()

@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-25
+
+### Added
+
+- 10 new Homebrew-equivalent commands: `pin`/`unpin`, `services` (list/start/stop/restart), `create`, `bump`, `reinstall`, `deps` (`--tree`), `leaves`, `autoremove`, `home`, `log` (`--follow`)
+- 28 CLI commands total (up from 18)
+
+### Changed
+
+- Split `cli.py` (1384 lines → 50 lines) into modular `cmd/` package with 29 files
+- Monolith resolved: each command in its own file under `cmd/_*.py`
+- `test_version` now dynamically reads `__version__` instead of hardcoding
+
+### Fixed
+
+- Ruff lint issues in new cmd files
+
 ## [0.1.1] — 2026-05-25
 
 ### Fixed
@@ -35,7 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - YAML-based configuration file support
 - Initial Python package published on PyPI
 
-[Unreleased]: https://github.com/weinotes/mcp-pm/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/weinotes/mcp-pm/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/weinotes/mcp-pm/releases/tag/v0.2.0
 [0.1.1]: https://github.com/weinotes/mcp-pm/releases/tag/v0.1.1
 [0.1.0]: https://github.com/weinotes/mcp-pm/releases/tag/v0.1.0
 
