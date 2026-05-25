@@ -487,6 +487,136 @@ class NpmRegistryBackend(RegistryBackend):
         return await self.search("", limit)
 
 
+class McpRegistryBackend(RegistryBackend):
+    """Query the official MCP Registry API (registry.modelcontextprotocol.io).
+
+    The official MCP Registry is the community-driven primary source of
+    truth for MCP servers, maintained by the MCP Steering Committee.
+    No API key is required.
+
+    API: GET https://registry.modelcontextprotocol.io/v0/servers
+    Params: search, limit, cursor
+    Docs: https://registry.modelcontextprotocol.io/docs
+    """
+
+    name = "mcp_registry"
+    base_url = "https://registry.modelcontextprotocol.io"
+
+    def __init__(self, client: httpx.AsyncClient | None = None) -> None:
+        self._client = client
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(
+                headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+                timeout=httpx.Timeout(4.0),
+            )
+        return self._client
+
+    def _parse_server(self, raw: dict[str, Any]) -> ServerManifest | None:
+        try:
+            name = raw.get("name") or raw.get("id") or raw.get("qualifiedName") or ""
+            if not name:
+                return None
+
+            source_type = "git"
+            source_url = raw.get("repository") or raw.get("source_url", "")
+            install_cmd = raw.get("command", raw.get("install", ""))
+            if isinstance(install_cmd, str):
+                if "npx" in install_cmd or "npm" in install_cmd:
+                    source_type = "npm"
+                    source_url = source_url or install_cmd
+                elif "pip" in install_cmd or "uvx" in install_cmd:
+                    source_type = "pip"
+                    source_url = source_url or install_cmd
+                elif "docker" in install_cmd:
+                    source_type = "docker"
+                    source_url = source_url or install_cmd
+            elif isinstance(install_cmd, dict):
+                pkg = str(install_cmd.get("package", ""))
+                if "npx" in pkg or "npm" in pkg:
+                    source_type = "npm"
+                elif "pip" in pkg or "uvx" in pkg:
+                    source_type = "pip"
+
+            tags: list[str] = []
+            raw_tags = raw.get("tags") or raw.get("categories", [])
+            if isinstance(raw_tags, list):
+                tags = [str(t) for t in raw_tags if t]
+            elif isinstance(raw_tags, str) and raw_tags:
+                tags = [raw_tags]
+
+            return ServerManifest(
+                name=name,
+                description=raw.get("description", "") or "",
+                source_type=source_type,
+                source_url=source_url or "",
+                author=raw.get("author") or raw.get("publisher"),
+                homepage=raw.get("homepage") or raw.get("url", raw.get("website")),
+                license=raw.get("license"),
+                stars=int(raw.get("stars", raw.get("useCount", 0)) or 0),
+                tags=tags,
+                tools_count=int(raw.get("tools_count", raw.get("toolsCount", 0)) or 0),
+            )
+        except Exception as exc:
+            logger.debug("Failed to parse MCP Registry entry: %s", exc)
+            return None
+
+    async def search(self, query: str, limit: int = 20) -> list[ServerManifest]:
+        client = await self._get_client()
+        try:
+            resp = await client.get(
+                f"{self.base_url}/v0/servers",
+                params={"search": query, "limit": min(limit, 50)},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as exc:
+            logger.warning("MCP Registry search failed: %s", exc)
+            return []
+
+        entries: list[dict[str, Any]] = []
+        if isinstance(data, list):
+            entries = data
+        elif isinstance(data, dict):
+            entries = data.get("data", data.get("servers", data.get("results", [])))
+
+        results: list[ServerManifest] = []
+        for entry in entries[:limit]:
+            parsed = self._parse_server(entry)
+            if parsed:
+                results.append(parsed)
+        return results
+
+    async def get(self, name: str) -> ServerManifest | None:
+        client = await self._get_client()
+        try:
+            resp = await client.get(
+                f"{self.base_url}/v0/servers",
+                params={"search": name, "limit": 10},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as exc:
+            logger.warning("MCP Registry get '%s' failed: %s", name, exc)
+            return None
+
+        entries: list[dict[str, Any]] = []
+        if isinstance(data, list):
+            entries = data
+        elif isinstance(data, dict):
+            entries = data.get("data", data.get("servers", data.get("results", [])))
+
+        for entry in entries:
+            parsed = self._parse_server(entry)
+            if parsed and parsed.name == name:
+                return parsed
+        return None
+
+    async def popular(self, limit: int = 20) -> list[ServerManifest]:
+        return await self.search("", limit)
+
+
 class PyPIRegistryBackend(RegistryBackend):
     """Search PyPI for MCP server packages."""
 

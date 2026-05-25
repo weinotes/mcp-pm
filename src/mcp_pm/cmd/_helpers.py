@@ -112,8 +112,20 @@ def _detect_source_type(source: str) -> str | None:
         return "git"
     if source.startswith("npm") or source.startswith("@") or "/npm/" in source:
         return "npm"
-    if source.startswith("pip:") or source.startswith("uvx"):
+    if source.startswith("pip:") or source.startswith("pip install"):
         return "pip"
+    if source.startswith("uvx"):
+        return "uvx"
+    if source.startswith("npx"):
+        return "npx"
+    if source.startswith("go:"):
+        return "go"
+    if source.startswith("cargo:"):
+        return "cargo"
+    if source.startswith("deno:"):
+        return "deno"
+    if source.startswith("brew:"):
+        return "brew"
     if source.startswith("docker:") or source.startswith("docker.io"):
         return "docker"
     # If it looks like a package name without protocol, default to pip
@@ -127,7 +139,9 @@ def _derive_name(source: str) -> str:
     # Strip protocol
     name = source.rsplit("/", 1)[-1] if "/" in source else source
     # Strip common prefixes
-    for prefix in ("pip:", "npm:", "docker:", "uvx ", "uvx:"):
+    for prefix in ("pip:", "npm:", "docker:", "uvx:", "uvx ", "npx:", "npx ",
+                   "go:", "go install ", "cargo:", "cargo install ",
+                   "deno:", "deno install ", "brew:", "brew install "):
         if name.startswith(prefix):
             name = name[len(prefix) :]
     # Strip .git suffix
@@ -209,7 +223,7 @@ def _build_launch_command(manifest: dict[str, Any]) -> list[str] | None:
 
 
 @click.group()
-@click.version_option(version="0.2.1", prog_name="mcp-pm")
+@click.version_option(version="0.3.0", prog_name="mcp-pm")
 def cli() -> None:
     """mcp-pm — Homebrew for MCP Servers."""
     pass

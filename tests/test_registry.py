@@ -66,3 +66,93 @@ async def test_composite_registry_empty_backends() -> None:
     registry = CompositeRegistry([])
     results = await registry.search("test")
     assert results == []
+
+
+# ── Mock McpRegistryBackend (no real HTTP) ──────────────────────────────
+
+
+class MockMcpRegistry:
+    """Simple mock that exposes _parse_server without real HTTP calls."""
+
+    name = "mcp_registry"
+
+    def _parse_server(self, raw: dict) -> object:
+        from mcp_pm.registry.online import McpRegistryBackend
+        from mcp_pm.registry.models import ServerManifest
+        # Build a real backend instance and delegate (no HTTP calls involved)
+        result = McpRegistryBackend(client=None)._parse_server(raw)
+        return result
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_parse_server() -> None:
+    """McpRegistryBackend parses server entries correctly."""
+    backend = MockMcpRegistry()
+    raw = {
+        "name": "filesystem-server",
+        "description": "Access filesystem via MCP",
+        "repository": "https://github.com/modelcontextprotocol/filesystem",
+        "author": "MCP Team",
+        "tags": ["filesystem", "official"],
+        "stars": 150,
+        "tools_count": 5,
+    }
+    parsed = backend._parse_server(raw)
+    assert parsed is not None
+    assert parsed.name == "filesystem-server"
+    assert parsed.source_type == "git"
+    assert parsed.stars == 150
+    assert parsed.tools_count == 5
+    assert "filesystem" in parsed.tags
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_parse_server_pip() -> None:
+    """McpRegistryBackend detects pip source type from command field."""
+    backend = MockMcpRegistry()
+    raw = {
+        "name": "pip-server",
+        "description": "Pip installed server",
+        "command": "pip install my-server",
+        "tags": ["python"],
+    }
+    parsed = backend._parse_server(raw)
+    assert parsed is not None
+    assert parsed.name == "pip-server"
+    assert parsed.source_type == "pip"
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_parse_server_npm() -> None:
+    """McpRegistryBackend detects npm source type."""
+    backend = MockMcpRegistry()
+    raw = {
+        "name": "npm-server",
+        "description": "NPM server",
+        "command": "npx @org/mcp-server",
+    }
+    parsed = backend._parse_server(raw)
+    assert parsed is not None
+    assert parsed.source_type == "npm"
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_parse_server_empty_name() -> None:
+    """McpRegistryBackend returns None for entries without name."""
+    backend = MockMcpRegistry()
+    assert backend._parse_server({}) is None
+    assert backend._parse_server({"name": ""}) is None
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_parse_server_categories_as_tags() -> None:
+    """McpRegistryBackend handles categories field as tags."""
+    backend = MockMcpRegistry()
+    raw = {
+        "name": "cat-server",
+        "categories": ["database", "sql"],
+    }
+    parsed = backend._parse_server(raw)
+    assert parsed is not None
+    assert "database" in parsed.tags
+    assert "sql" in parsed.tags

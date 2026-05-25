@@ -7,8 +7,14 @@ Installer engine — handles installing, uninstalling, and updating MCP servers.
 
 Supports multiple source types:
   - git: clone from git repository
-  - npm: install via npm/git
+  - npm: install via npm
   - pip: install Python packages
+  - uvx: install via uv (fast Python/Rust)
+  - npx: install via npx (Node.js)
+  - go: install via 'go install'
+  - cargo: install via 'cargo install' (Rust)
+  - deno: install via 'deno install' (JavaScript/TypeScript)
+  - brew: install via Homebrew
   - docker: pull docker images
 
 Copyright (c) 2025-2026 Davey Wong <wgwcko@gmail.com>
@@ -39,6 +45,12 @@ class SourceType(StrEnum):
     NPM = "npm"
     PIP = "pip"
     DOCKER = "docker"
+    UVX = "uvx"
+    NPX = "npx"
+    GO = "go"
+    CARGO = "cargo"
+    DENO = "deno"
+    BREW = "brew"
 
 
 class InstallError(Exception):
@@ -144,6 +156,18 @@ class Installer:
                 result = await self.install_git(manifest)
             elif manifest.source_type == SourceType.PIP.value:
                 result = await self.install_pip(manifest)
+            elif manifest.source_type == SourceType.UVX.value:
+                result = await self.install_uvx(manifest)
+            elif manifest.source_type == SourceType.NPX.value:
+                result = await self.install_npx(manifest)
+            elif manifest.source_type == SourceType.GO.value:
+                result = await self.install_go(manifest)
+            elif manifest.source_type == SourceType.CARGO.value:
+                result = await self.install_cargo(manifest)
+            elif manifest.source_type == SourceType.DENO.value:
+                result = await self.install_deno(manifest)
+            elif manifest.source_type == SourceType.BREW.value:
+                result = await self.install_brew(manifest)
             else:
                 logger.error("Unsupported source type: %s", manifest.source_type)
                 return False
@@ -270,6 +294,241 @@ class Installer:
         _write_formula(target_dir, manifest_data)
         return target_dir
 
+    async def install_uvx(self, manifest: ServerManifest) -> Path:
+        """Install a Python/Rust package via uvx.
+
+        uvx is the fast, modern alternative to pip/npx, supporting
+        both Python and Rust packages with automatic environment management.
+
+        Returns the target path on success.
+        """
+        target_dir = self.install_dir / manifest.name
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        package = manifest.source_url
+        # Strip uvx: prefix
+        for prefix in ("uvx:", "uvx "):
+            if package.startswith(prefix):
+                package = package[len(prefix) :]
+        package = package.strip()
+
+        if not package:
+            raise InstallError("No package specifier found for uvx installation")
+
+        logger.info("Installing via uvx: %s", package)
+        returncode, stdout, stderr = await _run_cmd(["uvx", package])
+        if returncode != 0:
+            raise InstallError(f"uvx install failed (rc={returncode}): {stderr[:500]}")
+
+        version = self._extract_version_from_stdout(stdout, package, "uvx")
+
+        manifest_data: dict[str, Any] = {
+            "name": manifest.name,
+            "source_type": "uvx",
+            "source_url": manifest.source_url,
+            "package": package,
+            "version": version,
+            "installed_at": _now_iso(),
+            "description": manifest.description,
+            "author": manifest.author,
+            "homepage": manifest.homepage,
+        }
+        _write_manifest(target_dir, manifest_data)
+        _write_formula(target_dir, manifest_data)
+        return target_dir
+
+    async def install_npx(self, manifest: ServerManifest) -> Path:
+        """Install an npm package via npx.
+
+        npx executes npm packages without installing them globally.
+        For persistent installations, npm install -g is used.
+
+        Returns the target path on success.
+        """
+        target_dir = self.install_dir / manifest.name
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        package = manifest.source_url
+        for prefix in ("npx:", "npx "):
+            if package.startswith(prefix):
+                package = package[len(prefix) :]
+        package = package.strip()
+
+        if not package:
+            raise InstallError("No package specifier found for npx installation")
+
+        logger.info("Installing via npx: %s", package)
+        returncode, stdout, stderr = await _run_cmd(["npx", "-y", package])
+        if returncode != 0:
+            raise InstallError(f"npx install failed (rc={returncode}): {stderr[:500]}")
+
+        version = self._extract_version_from_stdout(stdout, package, "npx")
+
+        manifest_data: dict[str, Any] = {
+            "name": manifest.name,
+            "source_type": "npx",
+            "source_url": manifest.source_url,
+            "package": package,
+            "version": version,
+            "installed_at": _now_iso(),
+            "description": manifest.description,
+        }
+        _write_manifest(target_dir, manifest_data)
+        _write_formula(target_dir, manifest_data)
+        return target_dir
+
+    async def install_go(self, manifest: ServerManifest) -> Path:
+        """Install a Go package via 'go install'.
+
+        Installs Go binaries to $GOPATH/bin or $HOME/go/bin.
+
+        Returns the target path on success.
+        """
+        target_dir = self.install_dir / manifest.name
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        package = manifest.source_url
+        for prefix in ("go:", "go install "):
+            if package.startswith(prefix):
+                package = package[len(prefix) :]
+        package = package.strip()
+
+        if not package:
+            raise InstallError("No package specifier found for go installation")
+
+        logger.info("Installing via go install: %s", package)
+        returncode, stdout, stderr = await _run_cmd(["go", "install", package])
+        if returncode != 0:
+            raise InstallError(f"go install failed (rc={returncode}): {stderr[:500]}")
+
+        manifest_data: dict[str, Any] = {
+            "name": manifest.name,
+            "source_type": "go",
+            "source_url": manifest.source_url,
+            "package": package,
+            "version": "unknown",
+            "installed_at": _now_iso(),
+            "description": manifest.description,
+        }
+        _write_manifest(target_dir, manifest_data)
+        _write_formula(target_dir, manifest_data)
+        return target_dir
+
+    async def install_cargo(self, manifest: ServerManifest) -> Path:
+        """Install a Rust package via 'cargo install'.
+
+        Installs Rust binaries from crates.io or a git repository.
+
+        Returns the target path on success.
+        """
+        target_dir = self.install_dir / manifest.name
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        package = manifest.source_url
+        for prefix in ("cargo:", "cargo install "):
+            if package.startswith(prefix):
+                package = package[len(prefix) :]
+        package = package.strip()
+
+        if not package:
+            raise InstallError("No package specifier found for cargo installation")
+
+        logger.info("Installing via cargo: %s", package)
+        returncode, stdout, stderr = await _run_cmd(
+            ["cargo", "install", package], timeout=600,
+        )
+        if returncode != 0:
+            raise InstallError(f"cargo install failed (rc={returncode}): {stderr[:500]}")
+
+        manifest_data: dict[str, Any] = {
+            "name": manifest.name,
+            "source_type": "cargo",
+            "source_url": manifest.source_url,
+            "package": package,
+            "version": "unknown",
+            "installed_at": _now_iso(),
+            "description": manifest.description,
+        }
+        _write_manifest(target_dir, manifest_data)
+        _write_formula(target_dir, manifest_data)
+        return target_dir
+
+    async def install_deno(self, manifest: ServerManifest) -> Path:
+        """Install a Deno package via 'deno install'.
+
+        Installs Deno scripts and JavaScript/TypeScript packages.
+
+        Returns the target path on success.
+        """
+        target_dir = self.install_dir / manifest.name
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        package = manifest.source_url
+        for prefix in ("deno:", "deno install "):
+            if package.startswith(prefix):
+                package = package[len(prefix) :]
+        package = package.strip()
+
+        if not package:
+            raise InstallError("No package specifier found for deno installation")
+
+        logger.info("Installing via deno: %s", package)
+        returncode, stdout, stderr = await _run_cmd(
+            ["deno", "install", "-g", package],
+        )
+        if returncode != 0:
+            raise InstallError(f"deno install failed (rc={returncode}): {stderr[:500]}")
+
+        manifest_data: dict[str, Any] = {
+            "name": manifest.name,
+            "source_type": "deno",
+            "source_url": manifest.source_url,
+            "package": package,
+            "version": "unknown",
+            "installed_at": _now_iso(),
+            "description": manifest.description,
+        }
+        _write_manifest(target_dir, manifest_data)
+        _write_formula(target_dir, manifest_data)
+        return target_dir
+
+    async def install_brew(self, manifest: ServerManifest) -> Path:
+        """Install a macOS Homebrew package via 'brew install'.
+
+        Installs packages via Homebrew on macOS and Linux.
+
+        Returns the target path on success.
+        """
+        target_dir = self.install_dir / manifest.name
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        package = manifest.source_url
+        for prefix in ("brew:", "brew install "):
+            if package.startswith(prefix):
+                package = package[len(prefix) :]
+        package = package.strip()
+
+        if not package:
+            raise InstallError("No package specifier found for brew installation")
+
+        logger.info("Installing via brew: %s", package)
+        returncode, stdout, stderr = await _run_cmd(["brew", "install", package])
+        if returncode != 0:
+            raise InstallError(f"brew install failed (rc={returncode}): {stderr[:500]}")
+
+        manifest_data: dict[str, Any] = {
+            "name": manifest.name,
+            "source_type": "brew",
+            "source_url": manifest.source_url,
+            "package": package,
+            "version": "unknown",
+            "installed_at": _now_iso(),
+            "description": manifest.description,
+        }
+        _write_manifest(target_dir, manifest_data)
+        _write_formula(target_dir, manifest_data)
+        return target_dir
+
     async def uninstall(self, name: str) -> bool:
         """Remove an installed MCP server directory.
 
@@ -320,6 +579,31 @@ class Installer:
                 return await self._update_git(name, target_dir)
             elif source_type == "pip":
                 return await self._update_pip(name, target_dir, manifest)
+            elif source_type in ("uvx", "npx", "go", "cargo", "deno", "brew"):
+                logger.info("Reinstalling '%s' via %s ...", name, source_type)
+                # For non-git/npm sources, reinstall is done by
+                # re-running the install command
+                server_manifest = ServerManifest(
+                    name=name,
+                    description=manifest.get("description", ""),
+                    source_type=source_type,
+                    source_url=manifest.get("source_url", manifest.get("package", name)),
+                )
+                if source_type == "uvx":
+                    await self.install_uvx(server_manifest)
+                elif source_type == "npx":
+                    await self.install_npx(server_manifest)
+                elif source_type == "go":
+                    await self.install_go(server_manifest)
+                elif source_type == "cargo":
+                    await self.install_cargo(server_manifest)
+                elif source_type == "deno":
+                    await self.install_deno(server_manifest)
+                elif source_type == "brew":
+                    await self.install_brew(server_manifest)
+                manifest["updated_at"] = _now_iso()
+                _write_manifest(target_dir, manifest)
+                return True
             else:
                 logger.error("Unsupported source type for update: %s", source_type)
                 return False
@@ -369,6 +653,31 @@ class Installer:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _extract_version_from_stdout(stdout: str, pkg_name: str, tool: str = "pip") -> str:
+        """Extract installed version from tool stdout output.
+
+        Supports pip, uvx, and npx output formats.
+        Returns ``\"unknown\"`` if version cannot be determined.
+        """
+        for line in stdout.splitlines():
+            line = line.strip()
+            # pip: "Successfully installed <pkg>-<version>"
+            if "Successfully installed" in line:
+                for word in line.split():
+                    if pkg_name.replace("-", "_") in word or pkg_name in word:
+                        ver_part = word.split(pkg_name, 1)[-1]
+                        if ver_part.startswith("-"):
+                            ver_part = ver_part[1:]
+                        if ver_part:
+                            return ver_part
+            # uvx: "Installed <pkg> v<version>"
+            if "Installed" in line and pkg_name in line:
+                for word in line.split():
+                    if word.startswith("v") and word[1:][:1].isdigit():
+                        return word[1:]
+        return "unknown"
 
     async def _auto_post_install(self, target_dir: Path) -> None:
         """Run npm/pip install automatically if standard files are found."""

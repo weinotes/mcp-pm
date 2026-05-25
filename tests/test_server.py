@@ -100,7 +100,7 @@ class TestCreateApp:
         assert data["status"] == "ok"
         assert data["servers_loaded"] == 0
         assert data["tools_loaded"] == 0
-        assert data["version"] == "0.2.1"
+        assert data["version"] == "0.3.0"
 
     def test_health_endpoint_populated(self, populated_session: MCPSession) -> None:
         """Health check with servers shows correct counts."""

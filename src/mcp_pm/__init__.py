@@ -13,5 +13,5 @@ Author: Davey Wong <wgwcko@gmail.com> (https://www.guangweiblog.com)
 Licensed under MIT License.
 """
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 __author__ = "Davey Wong <wgwcko@gmail.com>"

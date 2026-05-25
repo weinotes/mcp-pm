@@ -16,6 +16,7 @@ from mcp_pm.registry.builtin import BuiltInBackend
 from mcp_pm.registry.models import ServerManifest
 from mcp_pm.registry.online import (
     GitHubRegistryBackend,
+    McpRegistryBackend,
     McpSoBackend,
     NpmRegistryBackend,
     PyPIRegistryBackend,
@@ -132,7 +133,7 @@ class RegistryManager:
         """Initialize with optional custom backends and HTTP client.
 
         If no backends are given, creates the default backends:
-        BuiltIn, MCP.so, GitHub Registry, Smithery, npm, PyPI.
+        BuiltIn, MCP.so, MCP Registry, GitHub Registry, Smithery, npm, PyPI.
 
         Args:
             backends: Custom backend list (overrides defaults).
@@ -147,6 +148,7 @@ class RegistryManager:
             self.backends = [
                 BuiltInBackend(extra_paths=extra_catalog_paths),
                 TapRegistryBackend(),
+                McpRegistryBackend(client=client),
                 McpSoBackend(client=client),
                 GitHubRegistryBackend(client=client),
                 SmitheryBackend(client=client),

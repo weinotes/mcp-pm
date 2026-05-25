@@ -34,7 +34,10 @@ class TestSourceType:
         assert SourceType.DOCKER == "docker"
 
     def test_members(self) -> None:
-        assert set(SourceType.__members__) == {"GIT", "NPM", "PIP", "DOCKER"}
+        assert set(SourceType.__members__) == {
+            "GIT", "NPM", "PIP", "DOCKER", "UVX", "NPX",
+            "GO", "CARGO", "DENO", "BREW",
+        }
 
 
 # ── _run_cmd ──────────────────────────────────────────────────────────────────

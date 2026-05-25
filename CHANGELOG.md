@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-06-19
+
+### Added
+
+- **6 new source types** — now supports install via uvx, npx, go, cargo, deno, and brew (in addition to git, pip, npm)
+- **SourceType enum** expanded to 10 members — each with dedicated install/update methods
+- **`_extract_version_from_stdout()`** shared helper for version parsing across pip, uvx, and npx outputs
+- **Auto-detection** in `mcp-pm install` — CLI auto-detects uvx/npx/go/cargo/deno/brew from URL prefix
+
+### Changed
+
+- **Version bump** — 0.2.1 → 0.3.0 (minor: new install source types)
+
 ## [0.2.1] — 2026-06-19
 
 ### Fixed
@@ -70,7 +83,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - YAML-based configuration file support
 - Initial Python package published on PyPI
 
-[Unreleased]: https://github.com/weinotes/mcp-pm/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/weinotes/mcp-pm/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/weinotes/mcp-pm/releases/tag/v0.3.0
 [0.2.1]: https://github.com/weinotes/mcp-pm/releases/tag/v0.2.1
 [0.2.0]: https://github.com/weinotes/mcp-pm/releases/tag/v0.2.0
 [0.1.1]: https://github.com/weinotes/mcp-pm/releases/tag/v0.1.1
