@@ -110,7 +110,8 @@ def _read_manifest(manifest_dir: Path) -> dict[str, Any] | None:
     try:
         raw = manifest_path.read_text(encoding="utf-8")
         return yaml.safe_load(raw) or {}
-    except Exception:
+    except Exception as exc:
+        logger.debug("Failed to load manifest %s: %s", manifest_path, exc)
         return None
 
 

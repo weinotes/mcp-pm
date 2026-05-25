@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-pm"
-version = "0.1.0"
+version = "0.1.1"
 description = "Homebrew for MCP Servers — A CLI package manager for MCP servers"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -66,7 +66,7 @@ web = [
 where = ["src"]
 include = ["mcp_pm*"]
 
-[tool.setuptools.package_data]
+[tool.setuptools.package-data]
 mcp_pm = ["data/*.yaml"]
 
 [tool.ruff]
@@ -74,7 +74,6 @@ target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint.per-file-ignores]
-"src/mcp_pm/registry.py" = ["E501"]
 "src/mcp_pm/webui/lang.py" = ["E501"]
 "src/mcp_pm/cli.py" = ["E501"]
 "src/mcp_pm/sandbox.py" = ["E501"]

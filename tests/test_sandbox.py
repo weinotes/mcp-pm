@@ -140,6 +140,7 @@ async def test_subprocess_start_stop(sandbox_subprocess: SandboxManager) -> None
 
 
 @pytest.mark.asyncio
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 async def test_subprocess_start_command_not_found(sandbox_subprocess: SandboxManager) -> None:
     """SUBPROCESS level: non-existent command raises SandboxError."""
     with (

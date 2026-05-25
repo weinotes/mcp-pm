@@ -129,7 +129,7 @@ def _create_progress(description: str = "Working...") -> Progress:
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="mcp-pm")
+@click.version_option(version="0.1.1", prog_name="mcp-pm")
 def cli() -> None:
     """mcp-pm — Homebrew for MCP Servers."""
     pass
@@ -409,8 +409,8 @@ def _list_tools_for_server(server_name: str) -> list[dict[str, Any]]:
                 })
             _async_run(session.stop_server(server_name))
             return tools_info
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Failed to stop server '%s': %s", server_name, exc)
 
     return []
 

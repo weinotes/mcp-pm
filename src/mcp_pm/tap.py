@@ -75,7 +75,8 @@ class TapManager:
         try:
             raw = yaml.safe_load(self._index_path.read_text(encoding="utf-8"))
             return raw or {}
-        except Exception:
+        except Exception as exc:
+            logger.debug("Failed to load tap index: %s", exc)
             return {}
 
     def _write_index(self, index: dict[str, dict[str, Any]]) -> None:
@@ -223,7 +224,7 @@ class TapManager:
                     if raw and raw.get("name"):
                         raw["_tap"] = tap.name
                         entries.append(raw)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug("Failed to read tap formula '%s': %s", f, exc)
 
         return entries

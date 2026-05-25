@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 import os
 import resource
 import signal
@@ -29,6 +30,8 @@ from pathlib import Path
 from typing import Any
 
 from mcp_pm.exceptions import SandboxError
+
+logger = logging.getLogger(__name__)
 
 # ── Sandbox root directory ──────────────────────────────────────────────
 SANDBOX_ROOT: Path = Path.home() / ".mcp-pm" / "sandbox"
@@ -133,7 +136,8 @@ class SandboxManager:
                 return await self._health_subprocess(entry)
             elif entry.level == SandboxLevel.DOCKER:
                 return await self._health_docker(entry)
-        except Exception:
+        except Exception as exc:
+            logger.debug("Sandbox health check failed: %s", exc)
             return False
 
         return False
@@ -199,8 +203,8 @@ class SandboxManager:
                                 stats["memory_vsize_kb"] = int(parts[1])
                 except OSError:
                     pass
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Failed to collect sandbox stats: %s", exc)
 
         return stats
 
@@ -428,7 +432,8 @@ class SandboxManager:
             )
             stdout_bytes, _ = await proc.communicate()
             return proc.returncode == 0 and stdout_bytes.decode().strip() == "true"
-        except Exception:
+        except Exception as exc:
+            logger.debug("Docker health check failed: %s", exc)
             return False
 
 

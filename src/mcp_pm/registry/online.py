@@ -539,7 +539,8 @@ class PyPIRegistryBackend(RegistryBackend):
                             homepage=info.get("home_page", ""),
                             license=info.get("license", ""),
                         ))
-                except Exception:
+                except Exception as exc:
+                    logger.debug("Failed to parse PyPI result: %s", exc)
                     continue
         except Exception as exc:
             logger.debug("PyPI search failed: %s", exc)

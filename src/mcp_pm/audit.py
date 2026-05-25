@@ -249,7 +249,8 @@ def fix_issues(result: AuditResult) -> int:
 
     try:
         raw = yaml.safe_load(formula_path.read_text(encoding="utf-8")) or {}
-    except Exception:
+    except Exception as exc:
+        logger.debug("Failed to load formula YAML '%s': %s", formula_path, exc)
         return 0
 
     for issue in result.issues:
@@ -263,8 +264,8 @@ def fix_issues(result: AuditResult) -> int:
                     if ver and ver != "unknown":
                         raw["version"] = ver
                         fixed += 1
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug("Failed to infer version from manifest: %s", exc)
 
     if fixed > 0:
         formula_path.write_text(

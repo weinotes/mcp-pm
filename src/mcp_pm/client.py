@@ -424,8 +424,8 @@ class HTTPMCPClient(MCPClient):
             resp.raise_for_status()
         except (httpx.ConnectError, httpx.TimeoutException) as exc:
             raise ConnectionError(f"Cannot reach MCP server at {self.base_url}: {exc}") from exc
-        except Exception:
-            # Some MCP servers may not have a health endpoint
+        except Exception as exc:
+            logger.debug("Health endpoint not available for %s: %s", self.base_url, exc)
             pass
 
         # Send initialize request via POST /message

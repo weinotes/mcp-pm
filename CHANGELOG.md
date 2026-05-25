@@ -9,12 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+## [0.1.1] — 2026-05-25
 
-- Project scaffolding and initial directory structure
-- All open-source standardization files (README, LICENSE, CONTRIBUTING, etc.)
-- GitHub CI/CD configuration and issue/PR templates
-- Project metadata and packaging configuration via `pyproject.toml`
+### Fixed
+
+- Fix `pyproject.toml` `[tool.setuptools.package_data]` → `[tool.setuptools.package-data]` for compatibility with setuptools ≥70
+- Remove dead ruff per-file-ignore entry for `registry.py` (file split to `registry/` directory)
+- Add `logger.debug()` to 14 `except Exception` blocks across 8 files — eliminate silent exception swallowing
+- Fix `tap.py` undefined variable `path` in exception handler (should be loop var `f`)
+- Suppress `MockProcess.wait` coroutine warning in sandbox test
 
 ## [0.1.0] — Planned
 
@@ -32,8 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - YAML-based configuration file support
 - Initial Python package published on PyPI
 
-[Unreleased]: https://github.com/daveywong/mcp-pm/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/daveywong/mcp-pm/releases/tag/v0.1.0
+[Unreleased]: https://github.com/weinotes/mcp-pm/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/weinotes/mcp-pm/releases/tag/v0.1.1
+[0.1.0]: https://github.com/weinotes/mcp-pm/releases/tag/v0.1.0
 
 ---
 

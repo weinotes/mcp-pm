@@ -48,7 +48,8 @@ class CompositeRegistry:
                     backend.search(query, limit),
                     timeout=3.0,
                 )
-            except Exception:
+            except Exception as exc:
+                logger.debug("Backend search '%s' failed: %s", backend, exc)
                 return []
 
         batches = await asyncio.gather(
@@ -76,7 +77,8 @@ class CompositeRegistry:
                     backend.get(name),
                     timeout=3.0,
                 )
-            except Exception:
+            except Exception as exc:
+                logger.debug("Backend get failed: %s", exc)
                 return None
 
         for result in await asyncio.gather(
@@ -98,7 +100,8 @@ class CompositeRegistry:
                     backend.popular(limit),
                     timeout=3.0,
                 )
-            except Exception:
+            except Exception as exc:
+                logger.debug("Backend popular '%s' failed: %s", backend, exc)
                 return []
 
         batches = await asyncio.gather(

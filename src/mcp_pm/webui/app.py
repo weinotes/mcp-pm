@@ -45,7 +45,7 @@ templates.env.globals["get_language"] = get_language
 
 app = FastAPI(
     title="mcp-pm Dashboard",
-    version="0.1.0",
+    version="0.1.1",
     description="Web UI for managing MCP servers and tools",
 )
 
@@ -111,7 +111,8 @@ def _read_logs(tail: int = 50) -> list[str]:
         text = log_file.read_text(encoding="utf-8", errors="replace")
         lines = text.splitlines()
         return lines[-tail:]
-    except Exception:
+    except Exception as exc:
+        logger.debug("Failed to tail log: %s", exc)
         return []
 
 
@@ -436,8 +437,8 @@ async def api_search(
         try:
             reg = _get_registry()
             results = await reg.popular(12)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Failed to fetch popular servers: %s", exc)
 
     # Render search results as HTML partial
     items_html = ""

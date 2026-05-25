@@ -157,7 +157,8 @@ class FormulaManager:
             try:
                 raw = yaml.safe_load(mpath.read_text(encoding="utf-8"))
                 return Formula.from_dict(raw or {})
-            except Exception:
+            except Exception as exc:
+                logger.debug("Failed to load formula '%s': %s", name, exc)
                 return None
         return None
 
