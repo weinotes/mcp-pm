@@ -42,6 +42,10 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
+# Default paths (used when no custom install_dir is provided)
+_DEFAULT_INSTALL_DIR = Path.home() / ".mcp-pm" / "servers"
+
+
 # ── Formula dataclass ─────────────────────────────────────────────────────
 
 
@@ -114,19 +118,19 @@ class Formula:
         return d
 
 
-# ── Formula file paths ───────────────────────────────────────────────────
-
-_INSTALL_DIR = Path.home() / ".mcp-pm" / "servers"
+# ── Legacy path helpers (kept for external callers) ───────────────────────
+# Note: FormulaManager methods now use self.install_dir directly.
+# These helpers still point to the default ~/.mcp-pm/servers/ location.
 
 
 def _formula_path(name: str) -> Path:
-    """Path to the formula YAML file for a server."""
-    return _INSTALL_DIR / name / "formula.yaml"
+    """Get formula.yaml path under the default install directory."""
+    return _DEFAULT_INSTALL_DIR / name / "formula.yaml"
 
 
 def _manifest_path(name: str) -> Path:
-    """Path to the legacy manifest YAML."""
-    return _INSTALL_DIR / name / "manifest.yaml"
+    """Get manifest.yaml path under the default install directory."""
+    return _DEFAULT_INSTALL_DIR / name / "manifest.yaml"
 
 
 # ── FormulaManager ───────────────────────────────────────────────────────
@@ -136,13 +140,13 @@ class FormulaManager:
     """Manages Formula loading, saving, and version checking."""
 
     def __init__(self, install_dir: Path | None = None) -> None:
-        self.install_dir = install_dir or _INSTALL_DIR
+        self.install_dir = install_dir or _DEFAULT_INSTALL_DIR
 
     # ── CRUD ─────────────────────────────────────────────────────────────
 
     def load(self, name: str) -> Formula | None:
         """Load a Formula from disk (formula.yaml or legacy manifest.yaml)."""
-        path = _formula_path(name)
+        path = self.install_dir / name / "formula.yaml"
         if path.exists():
             try:
                 raw = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -152,7 +156,7 @@ class FormulaManager:
                 return None
 
         # Fallback: try legacy manifest.yaml
-        mpath = _manifest_path(name)
+        mpath = self.install_dir / name / "manifest.yaml"
         if mpath.exists():
             try:
                 raw = yaml.safe_load(mpath.read_text(encoding="utf-8"))
@@ -166,7 +170,7 @@ class FormulaManager:
         """Write a Formula to disk as formula.yaml."""
         target_dir = self.install_dir / formula.name
         target_dir.mkdir(parents=True, exist_ok=True)
-        path = _formula_path(formula.name)
+        path = target_dir / "formula.yaml"
         path.write_text(
             yaml.dump(formula.to_dict(), default_flow_style=False, sort_keys=False),
             encoding="utf-8",
@@ -187,7 +191,7 @@ class FormulaManager:
 
     def delete(self, name: str) -> bool:
         """Delete the formula file (not the server directory)."""
-        path = _formula_path(name)
+        path = self.install_dir / name / "formula.yaml"
         if path.exists():
             path.unlink()
             return True

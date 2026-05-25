@@ -1,3 +1,7 @@
+# Copyright (c) 2025-2026 Davey Wong <wgwcko@gmail.com>
+# Author: Davey Wong <wgwcko@gmail.com> (https://www.guangweiblog.com)
+# Licensed under MIT License.
+
 """Language support for mcp-pm Web UI.
 
 Multi-language support with English (default) and Chinese (zh-CN).

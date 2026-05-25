@@ -1,3 +1,7 @@
+# mcp-pm — Homebrew for MCP Servers
+# Copyright (c) 2025-2026 Davey Wong <wgwcko@gmail.com>
+# Licensed under MIT License.
+
 # Python
 __pycache__/
 *.py[cod]
@@ -19,10 +23,8 @@ share/python-wheels/
 *.spec
 
 # Virtual environments
-.venv/
 venv/
-env/
-.venv
+.venv/
 env/
 ENV/
 
@@ -43,11 +45,10 @@ nosetests.xml
 .dmypy.json
 dmypy.json
 .ruff_cache/
-.pylintrc
 
 # IDE / editors
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
@@ -63,7 +64,6 @@ dmypy.json
 
 # Logs
 *.log
-*.log.*
 
 # OS files
 .DS_Store
@@ -71,7 +71,8 @@ Thumbs.db
 *.bak
 *.orig
 
-# Project specific
+# Project-specific
 data/
 *.db
 *.sqlite
+.mcp-pm/

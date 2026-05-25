@@ -209,7 +209,7 @@ def _build_launch_command(manifest: dict[str, Any]) -> list[str] | None:
 
 
 @click.group()
-@click.version_option(version="0.2.0", prog_name="mcp-pm")
+@click.version_option(version="0.2.1", prog_name="mcp-pm")
 def cli() -> None:
     """mcp-pm — Homebrew for MCP Servers."""
     pass

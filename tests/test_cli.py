@@ -26,6 +26,7 @@ def test_version() -> None:
     result = runner.invoke(cli, ["--version"])
     assert result.exit_code == 0
     from mcp_pm import __version__
+
     assert __version__ in result.output
 
 

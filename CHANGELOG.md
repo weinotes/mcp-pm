@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-06-19
+
+### Fixed
+
+- **P0: FormulaManager CRUD path inconsistency** — `save()`, `load()`, `delete()` now use `self.install_dir` instead of hardcoded `~/.mcp-pm/servers/`
+- **P2: Health endpoint version hardcoded** — `/health` returns `"0.2.1"` (was `"0.1.0"`)
+- **Copyright headers** — Added to `webui/lang.py`
+
+### Added
+
+- **255 production-grade unit tests** (up from 28), covering formula, installer, tap, client, server, exceptions
+- **Coverage 22% → 43%** — core modules at 77-96%
+- **Deduplicated `.gitignore`** — 57 unique entries, added `.mcp-pm/`
+
+### Changed
+
+- **Version bump** — 0.2.0 → 0.2.1 (SemVer patch for bugfixes)
+
 ## [0.2.0] — 2026-05-25
 
 ### Added
@@ -53,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial Python package published on PyPI
 
 [Unreleased]: https://github.com/weinotes/mcp-pm/compare/v0.2.0...HEAD
+[0.2.1]: https://github.com/weinotes/mcp-pm/releases/tag/v0.2.1
 [0.2.0]: https://github.com/weinotes/mcp-pm/releases/tag/v0.2.0
 [0.1.1]: https://github.com/weinotes/mcp-pm/releases/tag/v0.1.1
 [0.1.0]: https://github.com/weinotes/mcp-pm/releases/tag/v0.1.0

@@ -195,7 +195,7 @@ def create_app(session: MCPSession) -> FastAPI:
     """
     app = FastAPI(
         title="mcp-pm Proxy Server",
-        version="0.2.0",
+        version="0.2.1",
         description="OpenAI-compatible API proxy for MCP tools",
     )
 
@@ -212,7 +212,7 @@ def create_app(session: MCPSession) -> FastAPI:
         tool_count = sum(len(s.tools) for s in session.servers.values())
         return {
             "status": "ok",
-            "version": "0.1.0",
+            "version": "0.2.1",
             "servers_loaded": len(session.servers),
             "tools_loaded": tool_count,
             "servers": list(session.servers.keys()),
